@@ -1,7 +1,9 @@
 const CANDIDATE_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash"
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-3-flash",
+  "gemini-2.5-flash"
 ];
 
 const MAX_CHARS = 800;
@@ -342,9 +344,9 @@ async function callGemini(apiKey, text, mode) {
         body: JSON.stringify(payload)
       });
 
-      if (response.status === 404 || response.status === 503) {
+      if (response.status === 404 || response.status === 429 || response.status === 503) {
         lastError = new Error(`Model ${model} unavailable (${response.status})`);
-        continue;
+        continue; // Instantly cascade to the next Lite model
       }
 
       if (!response.ok) {
