@@ -1,131 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Korean Lab · 한국어 랩</title>
-  <meta name="description" content="Deconstruct, analyze, and master Korean sentences with clarity." />
-  <!-- Google Fonts: IBM Plex Family (Sans, Sans KR, Mono) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korean Lab — Deconstruct & Analyze</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇰🇷</text></svg>">
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Sans+KR:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
 </head>
 
 <body>
+
   <header class="site-header">
-    <a class="brand" href="#analyzer">
-      <span class="brand-badge">🇰🇷</span>
-      <span class="brand-text">Korean Lab <span class="brand-sub">연구소</span></span>
-    </a>
-    <nav class="nav-pills">
-      <a href="#analyzer" class="nav-link active" data-nav="analyzer">Analyze</a>
-      <a href="#history" class="nav-link" data-nav="history">History</a>
-      <a href="#settings" class="nav-link" data-nav="settings">Settings</a>
-    </nav>
+    <div class="wrap header-inner">
+      <a href="#analyzer" class="brand-lockup">
+        <span class="brand-badge">KO</span>
+        <span class="brand-title">KOREAN LAB</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#analyzer" class="nav-link active" data-nav="analyzer">Analyzer</a>
+        <a href="#history" class="nav-link" data-nav="history">History</a>
+        <a href="#settings" class="nav-link" data-nav="settings">Settings</a>
+      </nav>
+    </div>
   </header>
 
-  <main>
-    <!-- ANALYZER VIEW -->
+  <main class="wrap main-container">
+
+    <!-- 1. ANALYZER VIEW -->
     <section id="analyzer" class="view active">
-      <div class="hero">
-        <div class="cute-tag">✨ Interactive Korean Breakdown</div>
-        <h1>Understand Korean,<br /><span class="gradient-text">piece by piece.</span></h1>
-        <p>Drop any Korean sentence, dialogue, or idiom to reveal its grammar roots, particles, and nuanced meaning.</p>
+
+      <!-- Architectural Editorial Masthead -->
+      <div id="analyzer-hero" class="analyzer-hero">
+        <div class="hero-tag-row">
+          <span class="hero-badge mono">SPECIMEN // 01</span>
+          <span class="hero-subtitle mono">LINGUISTIC DECONSTRUCTION LAB</span>
+        </div>
+        <h1 class="hero-title">Unpack the anatomy of Korean.</h1>
+        <p class="hero-summary">
+          Paste or type any Korean phrase, dialogue, or grammar pattern to analyze underlying particles, grammatical
+          roots, and speech nuance.
+        </p>
       </div>
 
-      <form id="analyze-form" class="input-panel">
-        <div class="textarea-wrapper">
-          <textarea id="korean-input" maxlength="800" spellcheck="false"
-            placeholder="한국어 문장이나 표현을 입력하세요...">비가 오는데도 친구를 만나러 갔어요.</textarea>
+      <!-- Input Pod Form -->
+      <form id="analyze-form" class="editor-pod">
+        <div class="editor-header">
+          <span class="editor-meta mono">INPUT // HANGUL PHRASE OR TEXT</span>
+          <span id="char-count" class="editor-meta mono">0 / 800</span>
         </div>
-        <div class="input-toolbar">
-          <div class="meta-chips">
-            <span id="language-summary" class="badge"></span>
-            <span id="char-count" class="char-count">0 / 800</span>
+
+        <textarea id="korean-input"
+          placeholder="Paste or type any Korean sentence, dialogue, or grammar phrase (e.g. 처음에는 회사와 공부를 같이 하기가 무섭고...)"
+          rows="4" spellcheck="false" autofocus></textarea>
+
+        <div class="editor-actions">
+          <div class="active-config mono">
+            <span id="language-summary">English</span>
           </div>
+
           <button id="analyze-btn" type="submit" class="btn-primary">
-            <span>Analyze</span>
-            <span class="btn-arrow">✨</span>
+            <span class="btn-tag">KO</span>
+            <span>ANALYZE</span>
           </button>
         </div>
       </form>
 
-      <div id="cache-prompt" class="notice notice-cache hidden">
-        <div class="notice-content">
-          <strong>💾 Saved breakdown found!</strong>
-          <p>You analyzed this exact sentence previously on this machine.</p>
-        </div>
-        <div class="notice-actions">
-          <button id="use-cache" class="btn-sm btn-primary" type="button">Load Saved</button>
-          <button id="analyze-again" class="btn-sm btn-secondary" type="button">Re-analyze</button>
+      <!-- Status / Alerts -->
+      <div id="status" class="alert-box hidden" role="status"></div>
+
+      <!-- Cache Prompt -->
+      <div id="cache-prompt" class="cache-callout hidden">
+        <span class="mono">ARCHIVED AUDIT FOUND FOR THIS PHRASE.</span>
+        <div class="cache-btns">
+          <button id="use-cache" type="button" class="btn-sm btn-outline">Load Saved</button>
+          <button id="analyze-again" type="button" class="btn-sm btn-solid">Re-Analyze ↺</button>
         </div>
       </div>
 
-      <section id="status" class="notice notice-status hidden"></section>
-
-      <!-- RESULT STAGE -->
-      <section id="result" class="result"></section>
+      <!-- Dynamic Output Results -->
+      <div id="result" class="result-mount"></div>
     </section>
 
-    <!-- HISTORY VIEW -->
+    <!-- 2. HISTORY VIEW -->
     <section id="history" class="view">
-      <div class="view-header">
-        <div class="cute-tag">📚 Study Archive</div>
-        <h1>Your Saved Sentences</h1>
-        <p class="muted">Stored locally in your browser. Re-inspect anytime without consuming Gemini API tokens.</p>
+      <div class="section-title-row">
+        <h2 class="section-heading">Study Ledger</h2>
+        <span class="mono count-badge">Saved Lookups</span>
       </div>
       <div id="history-list" class="history-grid"></div>
     </section>
 
-    <!-- SETTINGS VIEW -->
+    <!-- 3. SETTINGS VIEW -->
     <section id="settings" class="view">
-      <div class="view-header">
-        <div class="cute-tag">⚙️ Preferences</div>
-        <h1>Workspace Settings</h1>
-        <p class="muted">Your Gemini API key and learning settings never leave your device.</p>
+      <div class="section-title-row">
+        <h2 class="section-heading">Configuration & Engine</h2>
       </div>
 
-      <section class="card setting-card">
-        <div class="card-head">
-          <h2>Gemini API Key</h2>
-          <span class="badge subtle">BYOK</span>
+      <div class="settings-card">
+        <div class="setting-group">
+          <label class="setting-label mono">Google Gemini API Key</label>
+          <p class="setting-desc">Stored client-side in your browser's local storage. Never routed to external servers.
+          </p>
+          <div class="input-action-row">
+            <input type="password" id="api-key" placeholder="AIzaSy..." autocomplete="off">
+            <button id="save-key" type="button" class="btn-solid">Save Key</button>
+          </div>
+          <span id="key-saved" class="mono success-msg hidden">✓ Key locked and stored locally</span>
         </div>
-        <p class="card-desc">Saved directly in your browser's local cache. Calls are dispatched client-to-Google with
-          zero middleware tracking.</p>
-        <div class="setting-row">
-          <input id="api-key" type="password" placeholder="AIzaSy..." autocomplete="off" />
-          <button id="save-key" class="btn-secondary" type="button">Save Key</button>
+
+        <div class="setting-group">
+          <label class="setting-label mono">Target Languages</label>
+          <div id="language-options" class="chip-grid"></div>
         </div>
-        <p id="key-saved" class="save-toast hidden">✓ Saved successfully to your browser storage.</p>
-      </section>
 
-      <section class="card setting-card">
-        <h2>Target Translations</h2>
-        <p class="card-desc">Choose which auxiliary languages appear alongside the sentence breakdown.</p>
-        <div id="language-options" class="chips-group"></div>
-      </section>
+        <div class="setting-group">
+          <label class="setting-label mono">Learner Proficiency</label>
+          <div id="level-options" class="chip-grid"></div>
+        </div>
 
-      <section class="card setting-card">
-        <h2>Learner Level</h2>
-        <p class="card-desc">Tailors the depth of particle deconstruction and grammatical formality explanations.</p>
-        <div id="level-options" class="chips-group"></div>
-      </section>
-
-      <section class="card setting-card">
-        <h2>Explanation Detail</h2>
-        <p class="card-desc">Adjust the depth and length of nuances and comparative examples.</p>
-        <div id="detail-options" class="chips-group"></div>
-      </section>
+        <div class="setting-group">
+          <label class="setting-label mono">Breakdown Detail</label>
+          <div id="detail-options" class="chip-grid"></div>
+        </div>
+      </div>
     </section>
+
   </main>
 
-  <script type="module" src="./app.js"></script>
 </body>
 
 </html>
