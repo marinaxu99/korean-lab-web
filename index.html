@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Korean Lab</title>
+    <meta name="description" content="Understand Korean, sentence by sentence." />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#analyzer">Korean Lab</a>
+      <nav>
+        <a href="#history">History</a>
+        <a href="#settings">Settings</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="analyzer" class="view active">
+        <section class="hero">
+          <h1>Understand Korean,<br />sentence by sentence.</h1>
+          <p>Paste a Korean sentence or expression to see how it works.</p>
+        </section>
+
+        <form id="analyze-form" class="input-panel">
+          <textarea id="korean-input" maxlength="800" placeholder="한국어 문장이나 표현을 입력하세요...">비가 오는데도 친구를 만나러 갔어요.</textarea>
+          <div class="input-row">
+            <span id="language-summary" class="muted"></span>
+            <span id="char-count" class="muted">0 / 800</span>
+            <button type="submit">Analyze →</button>
+          </div>
+        </form>
+
+        <div id="cache-prompt" class="notice hidden">
+          <div>
+            <strong>Previously analyzed</strong>
+            <p>Same sentence and settings found in this browser.</p>
+          </div>
+          <button id="use-cache" type="button">Use saved analysis</button>
+          <button id="analyze-again" class="secondary" type="button">Analyze again</button>
+        </div>
+
+        <section id="status" class="notice hidden"></section>
+        <section id="result" class="result"></section>
+      </section>
+
+      <section id="history" class="view">
+        <h1>History</h1>
+        <p class="muted">Saved in this browser. Opening history does not call Gemini again.</p>
+        <div id="history-list" class="stack"></div>
+      </section>
+
+      <section id="settings" class="view">
+        <h1>Settings</h1>
+        <p class="muted">Your Gemini key and preferences are stored only in this browser.</p>
+
+        <section class="card">
+          <h2>Gemini API key</h2>
+          <label for="api-key">Browser-only key</label>
+          <div class="setting-row">
+            <input id="api-key" type="password" placeholder="Paste your Gemini API key" autocomplete="off" />
+            <button id="save-key" type="button">Save key</button>
+          </div>
+          <p class="muted">The key is not uploaded with this website. It is used directly from your browser when you analyze.</p>
+          <p id="key-saved" class="success hidden">Saved on this browser.</p>
+        </section>
+
+        <section class="card">
+          <h2>Translation languages</h2>
+          <div id="language-options" class="chips"></div>
+        </section>
+
+        <section class="card">
+          <h2>Learner level</h2>
+          <div id="level-options" class="chips"></div>
+        </section>
+
+        <section class="card">
+          <h2>Explanation detail</h2>
+          <div id="detail-options" class="chips"></div>
+        </section>
+
+        <section class="card subtle">
+          <h2>Privacy</h2>
+          <p>Sentence analysis is processed through the Google Gemini API using the key saved in this browser. Avoid entering private or identifying information.</p>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,312 @@
+:root {
+  --paper: #f7f7f5;
+  --surface: #ffffff;
+  --ink: #202020;
+  --muted: #737373;
+  --line: #e4e4e1;
+  --accent: #475f7e;
+  --accent-soft: #e9f0f6;
+  color-scheme: light;
+  font-family: Geist, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  min-height: 42px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+  color: white;
+  padding: 0 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button.secondary,
+.chip {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.site-header,
+main {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 0;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+nav {
+  display: flex;
+  gap: 22px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.view {
+  display: none;
+  padding-bottom: 80px;
+}
+
+.view.active {
+  display: block;
+}
+
+.hero {
+  padding-top: 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(42px, 7vw, 64px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+p {
+  line-height: 1.6;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.hero p {
+  max-width: 640px;
+  margin: 20px 0 0;
+  font-size: 18px;
+}
+
+.input-panel {
+  margin-top: 40px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 20px;
+  color: var(--ink);
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  font-size: 24px;
+  line-height: 1.65;
+  outline: none;
+}
+
+textarea:focus,
+input:focus {
+  border-color: var(--accent);
+}
+
+.input-row,
+.setting-row,
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-row {
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.input-row #language-summary {
+  margin-right: auto;
+}
+
+.notice,
+.card,
+.section {
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 20px;
+}
+
+.notice {
+  justify-content: space-between;
+}
+
+.notice p {
+  margin: 4px 0 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.result {
+  margin-top: 34px;
+}
+
+.section h2 {
+  margin-bottom: 16px;
+}
+
+.translation-grid,
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mini-card {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  padding: 14px;
+}
+
+.korean {
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.original {
+  font-size: 30px;
+  line-height: 1.5;
+}
+
+.segments,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.segment,
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  padding: 9px 12px;
+}
+
+.segment {
+  border-radius: 6px;
+  text-align: left;
+}
+
+.segment strong {
+  display: block;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  font-size: 22px;
+}
+
+.segment span,
+.small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.active-chip,
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+details {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  padding: 14px;
+}
+
+details + details,
+.stack > * + * {
+  margin-top: 12px;
+}
+
+summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  padding: 0 12px;
+  outline: none;
+}
+
+.subtle {
+  background: var(--paper);
+}
+
+.success {
+  margin: 10px 0 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .site-header,
+  main {
+    width: min(100% - 28px, 920px);
+  }
+
+  .input-row,
+  .setting-row,
+  .notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .translation-grid,
+  .two-column {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    width: 100%;
+  }
+}
