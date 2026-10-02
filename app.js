@@ -148,7 +148,7 @@ function renderChips(containerId, options, activeValues, onSelect) {
 }
 
 function saveKey() {
-  const key = $("api-key").value.trim();
+  const key = $("api-key").value.trim().replace(/\s+/g, "");
   key ? localStorage.setItem(KEY_STORAGE, key) : localStorage.removeItem(KEY_STORAGE);
   $("api-key").value = key;
   $("key-saved").classList.remove("hidden");
@@ -222,12 +222,24 @@ function validateInput(text) {
   return "";
 }
 
-/* --------------------------------------------------------------------------
-   Gemini API Orchestration
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Universal Gemini API Engine (Compatible with all user keys & tiers)
+   ========================================================================== */
+
+const CANDIDATE_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash"
+];
+
 async function callGemini(apiKey, text, mode) {
+  // 1. Sanitize the key: strip all hidden spaces, tabs, and newlines
+  const cleanKey = apiKey.trim().replace(/\s+/g, "");
+  if (!cleanKey) throw new Error("API key is empty.");
+
   const isWord = mode === "word";
 
+  // Schemas matching single-word vs full-sentence mode
   const schema = isWord
     ? {
       type: "OBJECT",
@@ -303,26 +315,60 @@ async function callGemini(apiKey, text, mode) {
       "JSON keys: mode ('sentence'), t {l,x}, lit, seg {s,m,b,mo[{f,m,b,y}]}, v {w,b,p,m,u}, g {p,m,f,u,e,c[{p,d}]}, n, k strings.",
     ].join("\n");
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: "You are an analytical Korean linguistics instructor. Output compact valid JSON strictly complying with schema." }] },
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-        maxOutputTokens: isWord ? 700 : tokenBudget(),
-        temperature: 0.15,
-      },
-    }),
-  });
+  const payload = {
+    systemInstruction: { parts: [{ text: "You are an analytical Korean linguistics instructor. Output compact valid JSON strictly complying with schema." }] },
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: schema,
+      // Ample token headroom to prevent truncated JSON:
+      maxOutputTokens: isWord ? 1000 : 2500,
+      temperature: 0.15,
+      // CRITICAL: Turns off internal reasoning tokens so 2.5-flash answers instantly
+      thinkingConfig: { thinkingBudget: 0 }
+    },
+  };
 
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
-  const data = await response.json();
-  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!raw) throw new Error("Gemini returned an empty response.");
-  return expand(JSON.parse(raw), text, mode);
+  let lastError = null;
+
+  // 2. Cascade through models until an active endpoint responds
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      // If this specific model is unavailable (404) or overloaded (503/429), try next
+      if (response.status === 404 || response.status === 503) {
+        console.warn(`[Korean Lab] ${model} returned ${response.status}. Trying next candidate...`);
+        lastError = new Error(`Model ${model} failed (${response.status})`);
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!raw) throw new Error("Gemini returned an empty response.");
+
+      return expand(JSON.parse(raw), text, mode);
+    } catch (err) {
+      if (err.message && (err.message.includes("404") || err.message.includes("503"))) {
+        lastError = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError || new Error("All Gemini candidate models failed. Please verify your API key.");
 }
 
 function tokenBudget() {
