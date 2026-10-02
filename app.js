@@ -50,14 +50,47 @@ function init() {
 function syncRoute() {
   const route = location.hash.replace("#", "") || "analyzer";
   document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === route));
+  document.querySelectorAll(".nav-link").forEach((link) => {
+    link.classList.toggle("active", link.dataset.nav === route);
+  });
   if (route === "history") renderHistory();
 }
 
 function updateCharCount() {
-  $("char-count").textContent = `${$("korean-input").value.length} / ${MAX_CHARS}`;
+  const count = $("korean-input").value.length;
+  $("char-count").textContent = `${count} / ${MAX_CHARS}`;
   $("language-summary").textContent = state.settings.translationLanguages.map(labelForLanguage).join(" + ");
 }
 
+/* --------------------------------------------------------------------------
+   Native Web Speech Audio Engine
+   -------------------------------------------------------------------------- */
+function playKoreanAudio(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel(); // Abort any ongoing speech
+
+  const cleanText = text.replace(/[[\]()~]/g, "").trim();
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = "ko-KR";
+  utterance.rate = 0.88; // Slightly reduced tempo for foreign learner comprehension
+
+  const voices = window.speechSynthesis.getVoices();
+  const koVoice = voices.find((v) => v.lang.startsWith("ko"));
+  if (koVoice) utterance.voice = koVoice;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// Global hook for inline HTML button triggers
+window.playAudioHook = (btn, text) => {
+  btn.classList.add("speaking");
+  playKoreanAudio(text);
+  setTimeout(() => btn.classList.remove("speaking"), 1400);
+};
+
+/* --------------------------------------------------------------------------
+   Settings & Chips Management
+   -------------------------------------------------------------------------- */
 function renderSettings() {
   renderChips("language-options", languages, state.settings.translationLanguages, (value) => {
     const current = new Set(state.settings.translationLanguages);
@@ -119,7 +152,7 @@ function saveKey() {
   key ? localStorage.setItem(KEY_STORAGE, key) : localStorage.removeItem(KEY_STORAGE);
   $("api-key").value = key;
   $("key-saved").classList.remove("hidden");
-  setTimeout(() => $("key-saved").classList.add("hidden"), 1800);
+  setTimeout(() => $("key-saved").classList.add("hidden"), 2000);
 }
 
 function loadSettings() {
@@ -132,6 +165,21 @@ function loadSettings() {
 
 function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
+}
+
+/* --------------------------------------------------------------------------
+   Analysis Dispatcher & Smart Input Heuristic
+   -------------------------------------------------------------------------- */
+function detectInputType(text) {
+  const trimmed = text.trim();
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  const hasSentencePunctuation = /[.?!~]/.test(trimmed);
+  const hasSentenceConjugation = /(?:다|요|죠|까|네|거든|잖아|는데|지만)$/.test(trimmed);
+
+  if (wordCount <= 2 && !hasSentencePunctuation && !hasSentenceConjugation) {
+    return "word";
+  }
+  return "sentence";
 }
 
 async function analyze(force) {
@@ -151,10 +199,12 @@ async function analyze(force) {
     return;
   }
 
-  showStatus("Analyzing Korean...\nKeeping the response compact to save your API usage.");
+  const mode = detectInputType(text);
+  showStatus(mode === "word" ? "Analyzing Korean vocabulary..." : "Analyzing Korean sentence structure...");
   setBusy(true);
+
   try {
-    const analysis = await callGemini(key, text);
+    const analysis = await callGemini(key, text, mode);
     saveHistory(analysis);
     renderResult(analysis);
     hideStatus();
@@ -172,51 +222,97 @@ function validateInput(text) {
   return "";
 }
 
-async function callGemini(apiKey, text) {
-  const schema = {
-    type: "OBJECT",
-    properties: {
-      t: { type: "ARRAY", items: { type: "OBJECT", properties: { l: { type: "STRING" }, x: { type: "STRING" } }, required: ["l", "x"] } },
-      lit: { type: "STRING" },
-      seg: {
-        type: "ARRAY",
-        items: {
+/* --------------------------------------------------------------------------
+   Gemini API Orchestration
+   -------------------------------------------------------------------------- */
+async function callGemini(apiKey, text, mode) {
+  const isWord = mode === "word";
+
+  const schema = isWord
+    ? {
+      type: "OBJECT",
+      properties: {
+        mode: { type: "STRING" },
+        t: { type: "ARRAY", items: { type: "OBJECT", properties: { l: { type: "STRING" }, x: { type: "STRING" } }, required: ["l", "x"] } },
+        v: {
           type: "OBJECT",
           properties: {
-            s: { type: "STRING" },
-            m: { type: "STRING" },
+            w: { type: "STRING" },
             b: { type: "STRING" },
-            mo: { type: "ARRAY", items: { type: "OBJECT", properties: { f: { type: "STRING" }, m: { type: "STRING" }, b: { type: "STRING" }, y: { type: "STRING" } }, required: ["f", "m"] } },
+            p: { type: "STRING" },
+            m: { type: "STRING" },
+            hanja: { type: "STRING" },
+            antonyms: { type: "ARRAY", items: { type: "STRING" } },
+            synonyms: { type: "ARRAY", items: { type: "STRING" } },
+            collocations: { type: "ARRAY", items: { type: "STRING" } },
           },
-          required: ["s", "m"],
+          required: ["w", "b", "p", "m"],
         },
+        ex: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: { ko: { type: "STRING" }, tr: { type: "STRING" } },
+            required: ["ko", "tr"],
+          },
+        },
+        n: { type: "STRING" },
       },
-      v: { type: "ARRAY", items: { type: "OBJECT", properties: { w: { type: "STRING" }, b: { type: "STRING" }, p: { type: "STRING" }, m: { type: "STRING" }, u: { type: "STRING" } }, required: ["w", "b", "p", "m"] } },
-      g: { type: "ARRAY", items: { type: "OBJECT", properties: { p: { type: "STRING" }, m: { type: "STRING" }, f: { type: "STRING" }, u: { type: "STRING" }, e: { type: "STRING" }, c: { type: "ARRAY", items: { type: "OBJECT", properties: { p: { type: "STRING" }, d: { type: "STRING" } }, required: ["p", "d"] } } }, required: ["p", "m", "e"] } },
-      n: { type: "STRING" },
-      k: { type: "ARRAY", items: { type: "STRING" } },
-    },
-    required: ["t", "seg", "v", "g", "k"],
-  };
+      required: ["mode", "t", "v", "ex"],
+    }
+    : {
+      type: "OBJECT",
+      properties: {
+        mode: { type: "STRING" },
+        t: { type: "ARRAY", items: { type: "OBJECT", properties: { l: { type: "STRING" }, x: { type: "STRING" } }, required: ["l", "x"] } },
+        lit: { type: "STRING" },
+        seg: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              s: { type: "STRING" },
+              m: { type: "STRING" },
+              b: { type: "STRING" },
+              mo: { type: "ARRAY", items: { type: "OBJECT", properties: { f: { type: "STRING" }, m: { type: "STRING" }, b: { type: "STRING" }, y: { type: "STRING" } }, required: ["f", "m"] } },
+            },
+            required: ["s", "m"],
+          },
+        },
+        v: { type: "ARRAY", items: { type: "OBJECT", properties: { w: { type: "STRING" }, b: { type: "STRING" }, p: { type: "STRING" }, m: { type: "STRING" }, u: { type: "STRING" } }, required: ["w", "b", "p", "m"] } },
+        g: { type: "ARRAY", items: { type: "OBJECT", properties: { p: { type: "STRING" }, m: { type: "STRING" }, f: { type: "STRING" }, u: { type: "STRING" }, e: { type: "STRING" }, c: { type: "ARRAY", items: { type: "OBJECT", properties: { p: { type: "STRING" }, d: { type: "STRING" } }, required: ["p", "d"] } } }, required: ["p", "m", "e"] } },
+        n: { type: "STRING" },
+        k: { type: "ARRAY", items: { type: "STRING" } },
+      },
+      required: ["mode", "t", "seg", "v", "g", "k"],
+    };
 
-  const prompt = [
-    `Korean: ${text}`,
-    `Target languages: ${state.settings.translationLanguages.join(", ")}`,
-    `Learner: ${state.settings.learnerLevel}; detail: ${state.settings.detailLevel}`,
-    "Limits: max 5 segments, 6 vocab, 4 grammar, 2 comparisons each, 3 takeaways. Be brief.",
-    "JSON keys: t {l,x}; lit; seg {s,m,b,mo[{f,m,b,y}]}; v {w,b,p,m,u}; g {p,m,f,u,e,c[{p,d}]}; n; k strings.",
-  ].join("\n");
+  const prompt = isWord
+    ? [
+      `Target Korean Word: ${text}`,
+      `Target translation languages: ${state.settings.translationLanguages.join(", ")}`,
+      `Learner level: ${state.settings.learnerLevel}`,
+      "Task: Treat as single word/term. Give definitions, root form, Hanja if Sino-Korean, 2-3 collocations, 2 natural example sentences, and nuance.",
+      "JSON keys: mode ('word'), t {l,x}, v {w,b,p,m,hanja,antonyms[],synonyms[],collocations[]}, ex [{ko,tr}], n.",
+    ].join("\n")
+    : [
+      `Target Korean Sentence: ${text}`,
+      `Target translation languages: ${state.settings.translationLanguages.join(", ")}`,
+      `Learner level: ${state.settings.learnerLevel}; Detail: ${state.settings.detailLevel}`,
+      "Limits: max 5 segments, 5 vocab, 3 grammar, 2 comparisons each, 3 takeaways.",
+      "JSON keys: mode ('sentence'), t {l,x}, lit, seg {s,m,b,mo[{f,m,b,y}]}, v {w,b,p,m,u}, g {p,m,f,u,e,c[{p,d}]}, n, k strings.",
+    ].join("\n");
 
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: "You teach Korean. Be accurate and concise. Return only compact JSON." }] },
+      systemInstruction: { parts: [{ text: "You are an analytical Korean linguistics instructor. Output compact valid JSON strictly complying with schema." }] },
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: schema,
-        maxOutputTokens: tokenBudget(),
+        maxOutputTokens: isWord ? 700 : tokenBudget(),
         temperature: 0.15,
       },
     }),
@@ -226,7 +322,7 @@ async function callGemini(apiKey, text) {
   const data = await response.json();
   const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!raw) throw new Error("Gemini returned an empty response.");
-  return expand(JSON.parse(raw), text);
+  return expand(JSON.parse(raw), text, mode);
 }
 
 function tokenBudget() {
@@ -235,20 +331,24 @@ function tokenBudget() {
   return 1150;
 }
 
-function expand(compact, original) {
+function expand(compact, original, detectedMode) {
+  const isWord = compact.mode === "word" || detectedMode === "word";
   return {
     id: crypto.randomUUID(),
     original,
+    mode: isWord ? "word" : "sentence",
     settings: structuredClone(state.settings),
     translations: (compact.t || []).map((item) => ({ language: item.l, label: labelForLanguage(item.l), text: item.x })),
     literalTranslation: compact.lit,
+    wordInfo: isWord ? compact.v : null,
+    examples: isWord ? compact.ex || [] : [],
     segments: (compact.seg || []).map((item) => ({
       surface: item.s,
       meaning: item.m,
       baseForm: item.b,
       morphology: (item.mo || []).map((m) => ({ form: m.f, meaning: m.m, baseForm: m.b, type: m.y })),
     })),
-    vocabulary: (compact.v || []).map((item) => ({ word: item.w, baseForm: item.b, partOfSpeech: item.p, meaning: item.m, formInSentence: item.u })),
+    vocabulary: !isWord ? (compact.v || []).map((item) => ({ word: item.w, baseForm: item.b, partOfSpeech: item.p, meaning: item.m, formInSentence: item.u })) : [],
     grammar: (compact.g || []).map((item) => ({
       pattern: item.p,
       meaning: item.m,
@@ -262,31 +362,208 @@ function expand(compact, original) {
   };
 }
 
+/* --------------------------------------------------------------------------
+   UI Rendering
+   -------------------------------------------------------------------------- */
 function renderResult(analysis) {
   const result = $("result");
   result.innerHTML = "";
-  result.append(section("Original", `<p class="korean original">${escapeHtml(analysis.original)}</p>`));
-  result.append(section("Translation", `<div class="translation-grid">${analysis.translations.map((t) => `<div class="mini-card"><p class="small">${escapeHtml(t.label)}</p><p>${escapeHtml(t.text)}</p></div>`).join("")}</div>`));
-  if (analysis.literalTranslation) result.append(section("Literal translation", `<p>${escapeHtml(analysis.literalTranslation)}</p>`));
-  result.append(section("Sentence breakdown", `<div class="segments">${analysis.segments.map((s) => `<div class="segment"><strong>${escapeHtml(s.surface)}</strong><span>${escapeHtml(s.meaning)}</span>${s.morphology?.length ? `<p class="small">${s.morphology.map((m) => `${escapeHtml(m.form)} = ${escapeHtml(m.meaning)}`).join("; ")}</p>` : ""}</div>`).join("")}</div>`));
-  result.append(section("Vocabulary", `<div class="stack">${analysis.vocabulary.map((v) => `<details><summary><strong class="korean">${escapeHtml(v.baseForm)}</strong> ${escapeHtml(v.meaning)} <span class="small">(${escapeHtml(v.partOfSpeech)})</span></summary>${v.formInSentence ? `<p class="small">Used as ${escapeHtml(v.formInSentence)}</p>` : ""}</details>`).join("")}</div>`));
-  result.append(section("Grammar", `<div class="stack">${analysis.grammar.map((g) => `<article class="mini-card"><h3 class="korean">${escapeHtml(g.pattern)}</h3><p><strong>${escapeHtml(g.meaning)}</strong></p>${g.formation ? `<p class="small">Formation: ${escapeHtml(g.formation)}</p>` : ""}${g.usageInSentence ? `<p class="small korean">Here: ${escapeHtml(g.usageInSentence)}</p>` : ""}<p>${escapeHtml(g.explanation)}</p>${g.comparisons?.length ? `<p class="small">Compare: ${g.comparisons.map((c) => `${escapeHtml(c.pattern)} — ${escapeHtml(c.difference)}`).join("; ")}</p>` : ""}</article>`).join("")}</div>`));
-  if (analysis.nuance) result.append(section("Nuance", `<p>${escapeHtml(analysis.nuance)}</p>`));
-  result.append(section("Key takeaways", `<ol>${analysis.keyTakeaways.map((k) => `<li>${escapeHtml(k.title || k.explanation)}</li>`).join("")}</ol>`));
+
+  // Original Specimen Banner with Audio Trigger
+  const orig = document.createElement("section");
+  orig.className = "original-box";
+  orig.innerHTML = `
+    <div class="original-header-row">
+      <div class="original-text-wrap">
+        <span class="badge subtle mode-badge">${analysis.mode === "word" ? "VOCABULARY" : "SENTENCE"}</span>
+        <p class="korean original-text">${escapeHtml(analysis.original)}</p>
+      </div>
+      <button type="button" class="btn-audio" title="Listen pronunciation" onclick="playAudioHook(this, '${escapeHtml(analysis.original)}')">
+        <span class="audio-icon">🔊</span>
+      </button>
+    </div>
+    ${analysis.literalTranslation ? `<div class="literal-box"><strong>Literal gloss:</strong> ${escapeHtml(analysis.literalTranslation)}</div>` : ""}
+  `;
+  result.append(orig);
+
+  // Translations Grid
+  result.append(section("Translations", "🌐", `
+    <div class="translation-grid">
+      ${analysis.translations.map((t) => `
+        <div class="trans-card">
+          <div class="trans-lang">${escapeHtml(t.label)}</div>
+          <div class="trans-text">${escapeHtml(t.text)}</div>
+        </div>
+      `).join("")}
+    </div>
+  `));
+
+  // BRANCH A: Word Mode Render
+  if (analysis.mode === "word" && analysis.wordInfo) {
+    const w = analysis.wordInfo;
+    result.append(section("Lexical Profile", "📖", `
+      <div class="word-profile-card">
+        <div class="word-profile-top">
+          <div>
+            <h3 class="korean word-base-title">${escapeHtml(w.b || w.w)}</h3>
+            ${w.hanja ? `<span class="hanja-tag">${escapeHtml(w.hanja)}</span>` : ""}
+            <span class="pos-tag">${escapeHtml(w.p)}</span>
+          </div>
+          <p class="word-primary-mean">${escapeHtml(w.m)}</p>
+        </div>
+        ${w.collocations?.length ? `
+          <div class="collocation-list">
+            <strong>Common Collocations:</strong>
+            ${w.collocations.map((c) => `<span class="colloc-pill korean">${escapeHtml(c)}</span>`).join("")}
+          </div>
+        ` : ""}
+      </div>
+    `));
+
+    if (analysis.examples?.length) {
+      result.append(section("Practical Examples", "💬", `
+        <div class="example-stack">
+          ${analysis.examples.map((ex) => `
+            <div class="example-item">
+              <div class="example-ko-row">
+                <span class="korean example-ko">${escapeHtml(ex.ko)}</span>
+                <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(ex.ko)}')">🔊</button>
+              </div>
+              <p class="example-tr">${escapeHtml(ex.tr)}</p>
+            </div>
+          `).join("")}
+        </div>
+      `));
+    }
+  }
+
+  // BRANCH B: Sentence Mode Render
+  if (analysis.mode === "sentence") {
+    // Morphological Breakdown
+    result.append(section("Sentence Breakdown", "🧩", `
+      <div class="segments-container">
+        ${analysis.segments.map((s) => `
+          <div class="segment-pill-card">
+            <div class="seg-top">
+              <span class="seg-surface korean">${escapeHtml(s.surface)}</span>
+              <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(s.surface)}')">🔊</button>
+            </div>
+            <span class="seg-meaning">${escapeHtml(s.meaning)}</span>${s.morphology?.length ? `
+              <div class="seg-morphology">
+                ${s.morphology.map((m) => `<strong>${escapeHtml(m.form)}</strong> (${escapeHtml(m.meaning)})`).join(" + ")}
+              </div>
+            ` : ""}
+          </div>
+        `).join("")}
+      </div>
+    `));
+
+    // Vocabulary Stack
+    result.append(section("Vocabulary", "📖", `
+      <div class="vocab-stack">
+        ${analysis.vocabulary.map((v) => `
+          <details class="clean-detail">
+            <summary class="clean-summary">
+              <div class="summary-left">
+                <span class="korean vocab-base">${escapeHtml(v.baseForm || v.word)}</span>
+                <span class="pos-tag">${escapeHtml(v.partOfSpeech)}</span>
+                <button type="button" class="btn-audio-mini" onclick="event.stopPropagation(); playAudioHook(this, '${escapeHtml(v.baseForm || v.word)}')">🔊</button>
+              </div>
+              <span class="vocab-meaning">${escapeHtml(v.meaning)}</span>
+            </summary>
+            ${v.formInSentence ? `<div class="vocab-detail-body">Appears in sentence as: <strong class="korean">${escapeHtml(v.formInSentence)}</strong></div>` : ""}
+          </details>
+        `).join("")}
+      </div>
+    `));
+
+    // Grammar Points
+    result.append(section("Grammar Points", "📐", `
+      <div class="grammar-stack">
+        ${analysis.grammar.map((g) => `
+          <article class="grammar-card">
+            <div class="grammar-top-row">
+              <span class="grammar-pattern korean">${escapeHtml(g.pattern)}</span>
+              <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(g.pattern)}')">🔊</button>
+            </div>
+            <div class="grammar-meaning">${escapeHtml(g.meaning)}</div>
+            <div class="grammar-meta">
+              ${g.formation ? `<div><strong>Rule:</strong> ${escapeHtml(g.formation)}</div>` : ""}
+              ${g.usageInSentence ? `<div><strong>Context:</strong> <span class="korean">${escapeHtml(g.usageInSentence)}</span></div>` : ""}
+            </div>
+            <p class="grammar-expl">${escapeHtml(g.explanation)}</p>${g.comparisons?.length ? `
+              <div class="grammar-compare">
+                <strong>Comparison:</strong>
+                ${g.comparisons.map((c) => `${escapeHtml(c.pattern)} (${escapeHtml(c.difference)})`).join("; ")}
+              </div>
+            ` : ""}
+          </article>
+        `).join("")}
+      </div>
+    `));
+  }
+
+  // Nuance & Pragmatics (Common to both modes)
+  if (analysis.nuance) {
+    result.append(section("Nuance & Usage", "💡", `<p class="nuance-text">${escapeHtml(analysis.nuance)}</p>`));
+  }
+
+  // Key Takeaways (Sentences only)
+  if (analysis.keyTakeaways?.length) {
+    result.append(section("Key Takeaways", "🎯", `
+      <ol class="takeaways-list">
+        ${analysis.keyTakeaways.map((k) => `<li>${escapeHtml(k.title || k.explanation)}</li>`).join("")}
+      </ol>
+    `));
+  }
 }
 
-function section(title, html) {
+function section(title, icon, innerHtml) {
   const element = document.createElement("section");
-  element.className = "section";
-  element.innerHTML = `<h2>${escapeHtml(title)}</h2>${html}`;
+  element.className = "result-card";
+  element.innerHTML = `
+    <div class="result-card-header">
+      <h2><span>${icon}</span> ${escapeHtml(title)}</h2>
+      <span class="header-pill">Analysis</span>
+    </div>
+    ${innerHtml}
+  `;
   return element;
 }
 
 function renderHistory() {
   const history = getHistory();
-  $("history-list").innerHTML = history.length
-    ? history.map((item) => `<article class="card"><p class="korean"><strong>${escapeHtml(item.original)}</strong></p><p class="muted">${escapeHtml(item.primaryTranslation || "")}</p><p class="small">${new Date(item.timestamp).toLocaleString()}</p></article>`).join("")
-    : `<section class="card"><p><strong>No saved analyses yet.</strong></p><p class="muted">Analyze a sentence and it will appear here automatically.</p></section>`;
+  const container = $("history-list");
+  if (!history.length) {
+    container.innerHTML = `<div class="card" style="text-align: center; color: var(--muted);"><p>No saved analyses yet. Enter a sentence or word to begin.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = history.map((item) => `
+    <article class="history-card" data-id="${item.id}">
+      <div class="history-main">
+        <div style="display: flex; gap: 8px; align-items: baseline;">
+          <span class="badge subtle" style="font-size: 9px;">${item.analysis?.mode === "word" ? "WORD" : "SENTENCE"}</span>
+          <span class="korean history-original">${escapeHtml(item.original)}</span>
+        </div>
+        <span class="history-trans">${escapeHtml(item.primaryTranslation || "")}</span>
+        <span class="history-time">${new Date(item.timestamp).toLocaleDateString()} · ${new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      <button class="btn-sm btn-secondary history-load-btn" type="button">Inspect</button>
+    </article>
+  `).join("");
+
+  container.querySelectorAll(".history-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const match = history.find((h) => h.id === card.dataset.id);
+      if (match) {
+        $("korean-input").value = match.original;
+        updateCharCount();
+        renderResult(match.analysis);
+        location.hash = "#analyzer";
+      }
+    });
+  });
 }
 
 function getHistory() {
@@ -317,7 +594,7 @@ function labelForLanguage(code) {
 
 function showStatus(message) {
   const [title, detail] = message.split("\n");
-  $("status").innerHTML = `<div><strong>${escapeHtml(title)}</strong>${detail ? `<p>${escapeHtml(detail)}</p>` : ""}</div>`;
+  $("status").innerHTML = `<div><strong>${escapeHtml(title)}</strong>${detail ? `<p style="margin-top: 4px;">${escapeHtml(detail)}</p>` : ""}</div>`;
   $("status").classList.remove("hidden");
 }
 
@@ -327,7 +604,9 @@ function hideStatus() {
 }
 
 function setBusy(busy) {
-  document.querySelector("#analyze-form button").disabled = busy;
+  const btn = $("analyze-btn");
+  btn.disabled = busy;
+  btn.querySelector("span").textContent = busy ? "Analyzing..." : "Analyze";
 }
 
 function friendlyError(error) {

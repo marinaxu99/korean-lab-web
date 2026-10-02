@@ -1,93 +1,129 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Korean Lab</title>
-    <meta name="description" content="Understand Korean, sentence by sentence." />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <a class="brand" href="#analyzer">Korean Lab</a>
-      <nav>
-        <a href="#history">History</a>
-        <a href="#settings">Settings</a>
-      </nav>
-    </header>
 
-    <main>
-      <section id="analyzer" class="view active">
-        <section class="hero">
-          <h1>Understand Korean,<br />sentence by sentence.</h1>
-          <p>Paste a Korean sentence or expression to see how it works.</p>
-        </section>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Korean Lab · 한국어 랩</title>
+  <meta name="description" content="Deconstruct, analyze, and master Korean sentences with clarity." />
+  <!-- Google Fonts: IBM Plex Family (Sans, Sans KR, Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
 
-        <form id="analyze-form" class="input-panel">
-          <textarea id="korean-input" maxlength="800" placeholder="한국어 문장이나 표현을 입력하세요...">비가 오는데도 친구를 만나러 갔어요.</textarea>
-          <div class="input-row">
-            <span id="language-summary" class="muted"></span>
-            <span id="char-count" class="muted">0 / 800</span>
-            <button type="submit">Analyze →</button>
-          </div>
-        </form>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#analyzer">
+      <span class="brand-badge">🇰🇷</span>
+      <span class="brand-text">Korean Lab <span class="brand-sub">연구소</span></span>
+    </a>
+    <nav class="nav-pills">
+      <a href="#analyzer" class="nav-link active" data-nav="analyzer">Analyze</a>
+      <a href="#history" class="nav-link" data-nav="history">History</a>
+      <a href="#settings" class="nav-link" data-nav="settings">Settings</a>
+    </nav>
+  </header>
 
-        <div id="cache-prompt" class="notice hidden">
-          <div>
-            <strong>Previously analyzed</strong>
-            <p>Same sentence and settings found in this browser.</p>
-          </div>
-          <button id="use-cache" type="button">Use saved analysis</button>
-          <button id="analyze-again" class="secondary" type="button">Analyze again</button>
+  <main>
+    <!-- ANALYZER VIEW -->
+    <section id="analyzer" class="view active">
+      <div class="hero">
+        <div class="cute-tag">✨ Interactive Korean Breakdown</div>
+        <h1>Understand Korean,<br /><span class="gradient-text">piece by piece.</span></h1>
+        <p>Drop any Korean sentence, dialogue, or idiom to reveal its grammar roots, particles, and nuanced meaning.</p>
+      </div>
+
+      <form id="analyze-form" class="input-panel">
+        <div class="textarea-wrapper">
+          <textarea id="korean-input" maxlength="800" spellcheck="false"
+            placeholder="한국어 문장이나 표현을 입력하세요...">비가 오는데도 친구를 만나러 갔어요.</textarea>
         </div>
-
-        <section id="status" class="notice hidden"></section>
-        <section id="result" class="result"></section>
-      </section>
-
-      <section id="history" class="view">
-        <h1>History</h1>
-        <p class="muted">Saved in this browser. Opening history does not call Gemini again.</p>
-        <div id="history-list" class="stack"></div>
-      </section>
-
-      <section id="settings" class="view">
-        <h1>Settings</h1>
-        <p class="muted">Your Gemini key and preferences are stored only in this browser.</p>
-
-        <section class="card">
-          <h2>Gemini API key</h2>
-          <label for="api-key">Browser-only key</label>
-          <div class="setting-row">
-            <input id="api-key" type="password" placeholder="Paste your Gemini API key" autocomplete="off" />
-            <button id="save-key" type="button">Save key</button>
+        <div class="input-toolbar">
+          <div class="meta-chips">
+            <span id="language-summary" class="badge"></span>
+            <span id="char-count" class="char-count">0 / 800</span>
           </div>
-          <p class="muted">The key is not uploaded with this website. It is used directly from your browser when you analyze.</p>
-          <p id="key-saved" class="success hidden">Saved on this browser.</p>
-        </section>
+          <button id="analyze-btn" type="submit" class="btn-primary">
+            <span>Analyze</span>
+            <span class="btn-arrow">✨</span>
+          </button>
+        </div>
+      </form>
 
-        <section class="card">
-          <h2>Translation languages</h2>
-          <div id="language-options" class="chips"></div>
-        </section>
+      <div id="cache-prompt" class="notice notice-cache hidden">
+        <div class="notice-content">
+          <strong>💾 Saved breakdown found!</strong>
+          <p>You analyzed this exact sentence previously on this machine.</p>
+        </div>
+        <div class="notice-actions">
+          <button id="use-cache" class="btn-sm btn-primary" type="button">Load Saved</button>
+          <button id="analyze-again" class="btn-sm btn-secondary" type="button">Re-analyze</button>
+        </div>
+      </div>
 
-        <section class="card">
-          <h2>Learner level</h2>
-          <div id="level-options" class="chips"></div>
-        </section>
+      <section id="status" class="notice notice-status hidden"></section>
 
-        <section class="card">
-          <h2>Explanation detail</h2>
-          <div id="detail-options" class="chips"></div>
-        </section>
+      <!-- RESULT STAGE -->
+      <section id="result" class="result"></section>
+    </section>
 
-        <section class="card subtle">
-          <h2>Privacy</h2>
-          <p>Sentence analysis is processed through the Google Gemini API using the key saved in this browser. Avoid entering private or identifying information.</p>
-        </section>
+    <!-- HISTORY VIEW -->
+    <section id="history" class="view">
+      <div class="view-header">
+        <div class="cute-tag">📚 Study Archive</div>
+        <h1>Your Saved Sentences</h1>
+        <p class="muted">Stored locally in your browser. Re-inspect anytime without consuming Gemini API tokens.</p>
+      </div>
+      <div id="history-list" class="history-grid"></div>
+    </section>
+
+    <!-- SETTINGS VIEW -->
+    <section id="settings" class="view">
+      <div class="view-header">
+        <div class="cute-tag">⚙️ Preferences</div>
+        <h1>Workspace Settings</h1>
+        <p class="muted">Your Gemini API key and learning settings never leave your device.</p>
+      </div>
+
+      <section class="card setting-card">
+        <div class="card-head">
+          <h2>Gemini API Key</h2>
+          <span class="badge subtle">BYOK</span>
+        </div>
+        <p class="card-desc">Saved directly in your browser's local cache. Calls are dispatched client-to-Google with
+          zero middleware tracking.</p>
+        <div class="setting-row">
+          <input id="api-key" type="password" placeholder="AIzaSy..." autocomplete="off" />
+          <button id="save-key" class="btn-secondary" type="button">Save Key</button>
+        </div>
+        <p id="key-saved" class="save-toast hidden">✓ Saved successfully to your browser storage.</p>
       </section>
-    </main>
 
-    <script type="module" src="./app.js"></script>
-  </body>
+      <section class="card setting-card">
+        <h2>Target Translations</h2>
+        <p class="card-desc">Choose which auxiliary languages appear alongside the sentence breakdown.</p>
+        <div id="language-options" class="chips-group"></div>
+      </section>
+
+      <section class="card setting-card">
+        <h2>Learner Level</h2>
+        <p class="card-desc">Tailors the depth of particle deconstruction and grammatical formality explanations.</p>
+        <div id="level-options" class="chips-group"></div>
+      </section>
+
+      <section class="card setting-card">
+        <h2>Explanation Detail</h2>
+        <p class="card-desc">Adjust the depth and length of nuances and comparative examples.</p>
+        <div id="detail-options" class="chips-group"></div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+
 </html>
