@@ -440,12 +440,23 @@ button:disabled {
   border-radius: var(--radius-pill);
 }
 
-/* Original Target Block */
+/* Original Sentence / Word Banner */
 .original-box {
   background: linear-gradient(135deg, #ffffff 0%, var(--surface-tint) 100%);
   border: 1.5px solid #d2e4de;
   border-radius: var(--radius-md);
   padding: 22px 24px;
+}
+
+.original-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mode-badge {
+  margin-bottom: 6px;
 }
 
 .original-text {
@@ -467,6 +478,53 @@ button:disabled {
 
 .literal-box strong {
   color: var(--accent);
+}
+
+/* Pronunciation Audio Buttons */
+.btn-audio {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-audio:hover {
+  border-color: var(--accent);
+  transform: scale(1.08);
+}
+
+.btn-audio.speaking {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: scale(0.96);
+}
+
+.btn-audio-mini {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.btn-audio-mini:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.btn-audio-mini.speaking {
+  opacity: 1;
+  transform: scale(0.95);
 }
 
 /* Translations */
@@ -499,7 +557,7 @@ button:disabled {
   color: var(--ink);
 }
 
-/* Morphological Parsing Pills */
+/* Morphological Sentence Breakdown (Clean static pills, no fake hover jump) */
 .segments-container {
   display: flex;
   flex-wrap: wrap;
@@ -516,13 +574,6 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.segment-pill-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-  background: var(--surface);
 }
 
 .seg-surface {
@@ -548,7 +599,7 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* Vocabulary Accordions */
+/* Vocabulary Stack (Solid clean cards, not clickable details) */
 .vocab-stack,
 .grammar-stack {
   display: flex;
@@ -556,44 +607,27 @@ button:disabled {
   gap: 10px;
 }
 
-details.clean-detail {
+.vocab-card {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: all 0.15s ease;
-}
-
-details.clean-detail[open] {
-  background: var(--surface);
-  border-color: var(--line-strong);
-}
-
-summary.clean-summary {
   padding: 12px 16px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  list-style: none;
-  font-size: 14px;
-  font-weight: 600;
-  user-select: none;
+  gap: 12px;
 }
 
-summary.clean-summary::-webkit-details-marker {
-  display: none;
-}
-
-.summary-left {
+.vocab-left {
   display: flex;
   align-items: baseline;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .vocab-base {
   font-family: var(--font-ko);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--ink);
 }
@@ -608,55 +642,62 @@ summary.clean-summary::-webkit-details-marker {
   border-radius: var(--radius-pill);
 }
 
-.vocab-detail-body {
-  padding: 12px 16px 14px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--ink-secondary);
-  background: #fafaf8;
+.vocab-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Grammar Cards */
+.vocab-meaning {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* Grammar Cards: Pattern -> Meaning -> Rule -> Explanation -> Compare */
 .grammar-card {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  padding: 16px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .grammar-pattern {
   font-family: var(--font-ko);
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--accent);
 }
 
 .grammar-meaning {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
 }
 
-.grammar-meta {
-  font-family: var(--font-mono);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.grammar-rule-box {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 12px;
   color: var(--ink-secondary);
 }
 
-.grammar-expl {
-  font-size: 13px;
+.grammar-rule-box strong {
+  font-family: var(--font-mono);
   color: var(--ink);
-  line-height: 1.55;
+  margin-right: 6px;
+}
+
+.grammar-expl {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  line-height: 1.6;
 }
 
 .grammar-compare {
@@ -666,82 +707,10 @@ summary.clean-summary::-webkit-details-marker {
   padding: 8px 12px;
   font-size: 12px;
   color: #8c4222;
+  margin-top: 4px;
 }
 
-/* Takeaways */
-.takeaways-list {
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--ink);
-}
-
-.takeaways-list li::marker {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-/* Audio Buttons & Pronunciation States */
-.original-header-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.mode-badge {
-  margin-bottom: 6px;
-}
-
-.btn-audio {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-}
-
-.btn-audio:hover {
-  border-color: var(--accent);
-  transform: scale(1.08);
-}
-
-.btn-audio.speaking {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  transform: scale(0.96);
-}
-
-.btn-audio-mini {
-  background: transparent;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0 4px;
-  opacity: 0.6;
-  transition: opacity 0.15s, transform 0.15s;
-}
-
-.btn-audio-mini:hover {
-  opacity: 1;
-  transform: scale(1.15);
-}
-
-.btn-audio-mini.speaking {
-  opacity: 1;
-  transform: scale(0.95);
-}
-
-/* Word Mode Profiles */
+/* Word Profile (Single Word Mode) */
 .word-profile-card {
   display: flex;
   flex-direction: column;
@@ -801,7 +770,6 @@ summary.clean-summary::-webkit-details-marker {
   font-size: 13px;
 }
 
-/* Example Sentences in Word Mode */
 .example-stack {
   display: flex;
   flex-direction: column;
@@ -813,12 +781,6 @@ summary.clean-summary::-webkit-details-marker {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
-}
-
-.example-ko-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .example-ko {
@@ -833,12 +795,19 @@ summary.clean-summary::-webkit-details-marker {
   margin-top: 4px;
 }
 
-/* Header Alignment in Breakdown Pills */
-.seg-top,
-.grammar-top-row {
+/* Takeaways */
+.takeaways-list {
+  padding-left: 20px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.takeaways-list li::marker {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 /* ==========================================================================

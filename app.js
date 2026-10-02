@@ -1,4 +1,9 @@
-const MODEL = "gemini-2.5-flash";
+const CANDIDATE_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash"
+];
+
 const MAX_CHARS = 800;
 const SETTINGS_KEY = "korean-lab-settings";
 const KEY_STORAGE = "korean-lab-gemini-api-key";
@@ -62,35 +67,43 @@ function updateCharCount() {
   $("language-summary").textContent = state.settings.translationLanguages.map(labelForLanguage).join(" + ");
 }
 
-/* --------------------------------------------------------------------------
-   Native Web Speech Audio Engine
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Natural Web Speech Pronunciation Engine
+   ========================================================================== */
 function playKoreanAudio(text) {
   if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel(); // Abort any ongoing speech
+  window.speechSynthesis.cancel();
 
-  const cleanText = text.replace(/[[\]()~]/g, "").trim();
+  const cleanText = text.replace(/[[\]()~-]/g, "").trim();
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.lang = "ko-KR";
-  utterance.rate = 0.88; // Slightly reduced tempo for foreign learner comprehension
+  utterance.rate = 0.92;
+  utterance.pitch = 1.05;
 
   const voices = window.speechSynthesis.getVoices();
-  const koVoice = voices.find((v) => v.lang.startsWith("ko"));
-  if (koVoice) utterance.voice = koVoice;
+  const naturalVoice = voices.find(
+    (v) =>
+      v.lang.startsWith("ko") &&
+      (v.name.includes("Yuna") ||
+        v.name.includes("Sora") ||
+        v.name.includes("Premium") ||
+        v.name.includes("Natural") ||
+        v.name.includes("Google 한국어"))
+  ) || voices.find((v) => v.lang.startsWith("ko"));
 
+  if (naturalVoice) utterance.voice = naturalVoice;
   window.speechSynthesis.speak(utterance);
 }
 
-// Global hook for inline HTML button triggers
 window.playAudioHook = (btn, text) => {
   btn.classList.add("speaking");
   playKoreanAudio(text);
   setTimeout(() => btn.classList.remove("speaking"), 1400);
 };
 
-/* --------------------------------------------------------------------------
-   Settings & Chips Management
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Settings Management
+   ========================================================================== */
 function renderSettings() {
   renderChips("language-options", languages, state.settings.translationLanguages, (value) => {
     const current = new Set(state.settings.translationLanguages);
@@ -167,9 +180,9 @@ function saveSettings() {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
 }
 
-/* --------------------------------------------------------------------------
-   Analysis Dispatcher & Smart Input Heuristic
-   -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Input Detection & Execution
+   ========================================================================== */
 function detectInputType(text) {
   const trimmed = text.trim();
   const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
@@ -223,23 +236,14 @@ function validateInput(text) {
 }
 
 /* ==========================================================================
-   Universal Gemini API Engine (Compatible with all user keys & tiers)
+   Universal API Call Engine
    ========================================================================== */
-
-const CANDIDATE_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash"
-];
-
 async function callGemini(apiKey, text, mode) {
-  // 1. Sanitize the key: strip all hidden spaces, tabs, and newlines
   const cleanKey = apiKey.trim().replace(/\s+/g, "");
   if (!cleanKey) throw new Error("API key is empty.");
 
   const isWord = mode === "word";
 
-  // Schemas matching single-word vs full-sentence mode
   const schema = isWord
     ? {
       type: "OBJECT",
@@ -321,43 +325,35 @@ async function callGemini(apiKey, text, mode) {
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: schema,
-      // Ample token headroom to prevent truncated JSON:
       maxOutputTokens: isWord ? 1000 : 2500,
       temperature: 0.15,
-      // CRITICAL: Turns off internal reasoning tokens so 2.5-flash answers instantly
       thinkingConfig: { thinkingBudget: 0 }
     },
   };
 
   let lastError = null;
 
-  // 2. Cascade through models until an active endpoint responds
   for (const model of CANDIDATE_MODELS) {
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
-
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
-      // If this specific model is unavailable (404) or overloaded (503/429), try next
       if (response.status === 404 || response.status === 503) {
-        console.warn(`[Korean Lab] ${model} returned ${response.status}. Trying next candidate...`);
-        lastError = new Error(`Model ${model} failed (${response.status})`);
+        lastError = new Error(`Model ${model} unavailable (${response.status})`);
         continue;
       }
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
+        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
       }
 
       const data = await response.json();
       const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!raw) throw new Error("Gemini returned an empty response.");
-
       return expand(JSON.parse(raw), text, mode);
     } catch (err) {
       if (err.message && (err.message.includes("404") || err.message.includes("503"))) {
@@ -369,12 +365,6 @@ async function callGemini(apiKey, text, mode) {
   }
 
   throw lastError || new Error("All Gemini candidate models failed. Please verify your API key.");
-}
-
-function tokenBudget() {
-  if (state.settings.detailLevel === "concise") return 850;
-  if (state.settings.detailLevel === "very-detailed") return 1600;
-  return 1150;
 }
 
 function expand(compact, original, detectedMode) {
@@ -408,14 +398,14 @@ function expand(compact, original, detectedMode) {
   };
 }
 
-/* --------------------------------------------------------------------------
+/* ==========================================================================
    UI Rendering
-   -------------------------------------------------------------------------- */
+   ========================================================================== */
 function renderResult(analysis) {
   const result = $("result");
   result.innerHTML = "";
 
-  // Original Specimen Banner with Audio Trigger
+  // 1. Original Sentence / Word Banner (With audio button)
   const orig = document.createElement("section");
   orig.className = "original-box";
   orig.innerHTML = `
@@ -424,7 +414,7 @@ function renderResult(analysis) {
         <span class="badge subtle mode-badge">${analysis.mode === "word" ? "VOCABULARY" : "SENTENCE"}</span>
         <p class="korean original-text">${escapeHtml(analysis.original)}</p>
       </div>
-      <button type="button" class="btn-audio" title="Listen pronunciation" onclick="playAudioHook(this, '${escapeHtml(analysis.original)}')">
+      <button type="button" class="btn-audio" title="Listen" onclick="playAudioHook(this, '${escapeHtml(analysis.original)}')">
         <span class="audio-icon">🔊</span>
       </button>
     </div>
@@ -432,7 +422,7 @@ function renderResult(analysis) {
   `;
   result.append(orig);
 
-  // Translations Grid
+  // 2. Translations Grid
   result.append(section("Translations", "🌐", `
     <div class="translation-grid">
       ${analysis.translations.map((t) => `
@@ -444,7 +434,7 @@ function renderResult(analysis) {
     </div>
   `));
 
-  // BRANCH A: Word Mode Render
+  // BRANCH A: Word Mode
   if (analysis.mode === "word" && analysis.wordInfo) {
     const w = analysis.wordInfo;
     result.append(section("Lexical Profile", "📖", `
@@ -471,10 +461,7 @@ function renderResult(analysis) {
         <div class="example-stack">
           ${analysis.examples.map((ex) => `
             <div class="example-item">
-              <div class="example-ko-row">
-                <span class="korean example-ko">${escapeHtml(ex.ko)}</span>
-                <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(ex.ko)}')">🔊</button>
-              </div>
+              <span class="korean example-ko">${escapeHtml(ex.ko)}</span>
               <p class="example-tr">${escapeHtml(ex.tr)}</p>
             </div>
           `).join("")}
@@ -483,17 +470,14 @@ function renderResult(analysis) {
     }
   }
 
-  // BRANCH B: Sentence Mode Render
+  // BRANCH B: Sentence Mode
   if (analysis.mode === "sentence") {
-    // Morphological Breakdown
+    // 3. Sentence Breakdown (Clean, static layout)
     result.append(section("Sentence Breakdown", "🧩", `
       <div class="segments-container">
         ${analysis.segments.map((s) => `
           <div class="segment-pill-card">
-            <div class="seg-top">
-              <span class="seg-surface korean">${escapeHtml(s.surface)}</span>
-              <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(s.surface)}')">🔊</button>
-            </div>
+            <span class="seg-surface korean">${escapeHtml(s.surface)}</span>
             <span class="seg-meaning">${escapeHtml(s.meaning)}</span>${s.morphology?.length ? `
               <div class="seg-morphology">
                 ${s.morphology.map((m) => `<strong>${escapeHtml(m.form)}</strong> (${escapeHtml(m.meaning)})`).join(" + ")}
@@ -504,57 +488,69 @@ function renderResult(analysis) {
       </div>
     `));
 
-    // Vocabulary Stack
-    result.append(section("Vocabulary", "📖", `
-      <div class="vocab-stack">
-        ${analysis.vocabulary.map((v) => `
-          <details class="clean-detail">
-            <summary class="clean-summary">
-              <div class="summary-left">
+    // 4. Vocabulary (Solid clean cards; audio kept here)
+    if (analysis.vocabulary?.length) {
+      result.append(section("Vocabulary", "📖", `
+        <div class="vocab-stack">
+          ${analysis.vocabulary.map((v) => `
+            <div class="vocab-card">
+              <div class="vocab-left">
                 <span class="korean vocab-base">${escapeHtml(v.baseForm || v.word)}</span>
-                <span class="pos-tag">${escapeHtml(v.partOfSpeech)}</span>
-                <button type="button" class="btn-audio-mini" onclick="event.stopPropagation(); playAudioHook(this, '${escapeHtml(v.baseForm || v.word)}')">🔊</button>
+                <span class="pos-tag">${escapeHtml(v.partOfSpeech)}</span>${v.formInSentence && v.formInSentence !== (v.baseForm || v.word) ? `<span class="muted" style="font-size:12px;">(as ${escapeHtml(v.formInSentence)})</span>` : ""}
               </div>
-              <span class="vocab-meaning">${escapeHtml(v.meaning)}</span>
-            </summary>
-            ${v.formInSentence ? `<div class="vocab-detail-body">Appears in sentence as: <strong class="korean">${escapeHtml(v.formInSentence)}</strong></div>` : ""}
-          </details>
-        `).join("")}
-      </div>
-    `));
+              <div class="vocab-right">
+                <span class="vocab-meaning">${escapeHtml(v.meaning)}</span>
+                <button type="button" class="btn-audio-mini" title="Listen" onclick="playAudioHook(this, '${escapeHtml(v.baseForm || v.word)}')">🔊</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `));
+    }
 
-    // Grammar Points
-    result.append(section("Grammar Points", "📐", `
-      <div class="grammar-stack">
-        ${analysis.grammar.map((g) => `
-          <article class="grammar-card">
-            <div class="grammar-top-row">
-              <span class="grammar-pattern korean">${escapeHtml(g.pattern)}</span>
-              <button type="button" class="btn-audio-mini" onclick="playAudioHook(this, '${escapeHtml(g.pattern)}')">🔊</button>
-            </div>
-            <div class="grammar-meaning">${escapeHtml(g.meaning)}</div>
-            <div class="grammar-meta">
-              ${g.formation ? `<div><strong>Rule:</strong> ${escapeHtml(g.formation)}</div>` : ""}
-              ${g.usageInSentence ? `<div><strong>Context:</strong> <span class="korean">${escapeHtml(g.usageInSentence)}</span></div>` : ""}
-            </div>
-            <p class="grammar-expl">${escapeHtml(g.explanation)}</p>${g.comparisons?.length ? `
-              <div class="grammar-compare">
-                <strong>Comparison:</strong>
-                ${g.comparisons.map((c) => `${escapeHtml(c.pattern)} (${escapeHtml(c.difference)})`).join("; ")}
-              </div>
-            ` : ""}
-          </article>
-        `).join("")}
-      </div>
-    `));
+    // 5. Grammar Points: Pattern -> Meaning -> Rule -> Explanation -> Compare
+    if (analysis.grammar?.length) {
+      result.append(section("Grammar Points", "📐", `
+        <div class="grammar-stack">
+          ${analysis.grammar.map((g) => {
+        const hasRule = Boolean(g.formation && g.formation.trim());
+        const hasUsage = Boolean(g.usageInSentence && g.usageInSentence.trim());
+        const hasComparisons = Boolean(g.comparisons && g.comparisons.length > 0);
+
+        return `
+              <article class="grammar-card">
+                <div class="grammar-pattern korean">${escapeHtml(g.pattern)}</div>
+                <div class="grammar-meaning">${escapeHtml(g.meaning)}</div>
+
+                ${(hasRule || hasUsage) ? `
+                  <div class="grammar-rule-box">
+                    ${hasRule ? `<div><strong>Rule:</strong> ${escapeHtml(g.formation)}</div>` : ""}
+                    ${hasUsage ? `<div><strong>In Sentence:</strong> <span class="korean">${escapeHtml(g.usageInSentence)}</span></div>` : ""}
+                  </div>
+                ` : ""}
+
+                ${g.explanation ? `<p class="grammar-expl">${escapeHtml(g.explanation)}</p>` : ""}
+
+                ${hasComparisons ? `
+                  <div class="grammar-compare">
+                    <strong>Comparison:</strong>
+                    ${g.comparisons.map((c) => `${escapeHtml(c.pattern)} (${escapeHtml(c.difference)})`).join("; ")}
+                  </div>
+                ` : ""}
+              </article>
+            `;
+      }).join("")}
+        </div>
+      `));
+    }
   }
 
-  // Nuance & Pragmatics (Common to both modes)
+  // 6. Nuance
   if (analysis.nuance) {
     result.append(section("Nuance & Usage", "💡", `<p class="nuance-text">${escapeHtml(analysis.nuance)}</p>`));
   }
 
-  // Key Takeaways (Sentences only)
+  // 7. Takeaways
   if (analysis.keyTakeaways?.length) {
     result.append(section("Key Takeaways", "🎯", `
       <ol class="takeaways-list">
