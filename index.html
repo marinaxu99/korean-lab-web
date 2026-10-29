@@ -1,141 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Korean Lab — Deconstruct & Analyze</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Sans+KR:wght@500;700&display=swap"
-    rel="stylesheet">
-
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="app.js"></script>
-</head>
-
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Korean Lab</title><link rel="icon" href="favicon-focus.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="study.css"><script defer src="app.js"></script><script defer src="study.js"></script></head>
 <body>
+<header class="site-header"><div class="wrap header-inner"><a href="#analyzer" class="brand-lockup"><img src="icon.svg" width="26" height="26" alt=""><span>Korean Lab</span></a><nav aria-label="Main navigation"><a href="#analyzer" class="nav-link active" data-nav="analyzer">Analyzer</a><a href="#notes" class="nav-link" data-nav="notes">My Notes</a><a href="#compare" class="nav-link" data-nav="compare">Compare</a><a href="#history" class="nav-link" data-nav="history">History</a><a href="#settings" class="nav-link" data-nav="settings">Settings</a></nav></div></header>
+<main class="wrap main-container">
+<section id="analyzer" class="view active">
+<div class="page-heading"><div><h1>Analyzer</h1></div></div>
+<div class="study-layout"><aside class="input-column"><form id="analyze-form" class="editor-pod"><div class="editor-header"><label for="korean-input">Korean text</label><span id="char-count">0 / 800</span></div><textarea id="korean-input" placeholder="Enter Korean text" rows="8" spellcheck="false" maxlength="800"></textarea><div class="editor-actions"><span id="language-summary">English</span><button id="analyze-btn" type="submit" class="btn-primary"><span>Analyze</span></button></div></form><div id="status" class="alert-box hidden" role="status"></div><div id="cache-prompt" class="cache-callout hidden"><p>A saved explanation is available.</p><div class="cache-btns"><button id="use-cache" type="button">Load saved</button><button id="analyze-again" type="button">Analyze again</button></div></div><a class="input-settings" href="#settings">Study preferences <span aria-hidden="true">↗</span></a></aside>
+<div class="reading-column"><div id="result" class="result-mount"><div class="empty-result"><p>No analysis yet.</p></div></div></div></div></section>
+<section id="history" class="view"><div class="page-heading"><div><h1>Study history</h1></div><span class="quiet-label">Saved on this device</span></div><div id="history-list" class="history-grid"></div></section>
+<section id="settings" class="view"><div class="page-heading"><div><h1>Study preferences</h1></div></div><div class="settings-layout"><div class="settings-card"><div class="setting-group"><label for="api-key" class="setting-label">Gemini API key</label><p class="setting-desc">Stored in this browser. Sent directly to Google for analysis and comparison.</p><div class="input-action-row"><input type="password" id="api-key" placeholder="Your API key" autocomplete="off"><button id="save-key" type="button">Save key</button></div><span id="key-saved" class="success-msg hidden" role="status">Key saved locally</span></div><fieldset class="setting-group"><legend class="setting-label">Learner proficiency</legend><div id="level-options" class="chip-grid"></div></fieldset><fieldset class="setting-group"><legend class="setting-label">Breakdown detail</legend><div id="detail-options" class="chip-grid"></div></fieldset><fieldset class="setting-group"><legend class="setting-label">Target languages</legend><div id="language-options" class="chip-grid"></div></fieldset></div></div></section>
 
-  <header class="site-header">
-    <div class="wrap header-inner">
-      <a href="#analyzer" class="brand-lockup">
-        <span class="brand-badge">KO</span>
-        <span class="brand-title">KOREAN LAB</span>
-      </a>
-
-      <nav class="nav-links">
-        <a href="#analyzer" class="nav-link active" data-nav="analyzer">Analyzer</a>
-        <a href="#history" class="nav-link" data-nav="history">History</a>
-        <a href="#settings" class="nav-link" data-nav="settings">Settings</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="wrap main-container">
-
-    <!-- 1. ANALYZER VIEW -->
-    <section id="analyzer" class="view active">
-
-      <!-- Architectural Editorial Masthead -->
-      <div id="analyzer-hero" class="analyzer-hero">
-        <div class="hero-tag-row">
-          <span class="hero-badge mono">SPECIMEN // 01</span>
-          <span class="hero-subtitle mono">LINGUISTIC DECONSTRUCTION LAB</span>
-        </div>
-        <h1 class="hero-title">Unpack the anatomy of Korean.</h1>
-        <p class="hero-summary">
-          Paste or type any Korean phrase, dialogue, or grammar pattern to analyze underlying particles, grammatical
-          roots, and speech nuance.
-        </p>
-      </div>
-
-      <!-- Input Pod Form -->
-      <form id="analyze-form" class="editor-pod">
-        <div class="editor-header">
-          <span class="editor-meta mono">INPUT // HANGUL PHRASE OR TEXT</span>
-          <span id="char-count" class="editor-meta mono">0 / 800</span>
-        </div>
-
-        <textarea id="korean-input"
-          placeholder="Paste or type any Korean sentence, dialogue, or grammar phrase (e.g. 처음에는 회사와 공부를 같이 하기가 무섭고...)"
-          rows="4" spellcheck="false" autofocus></textarea>
-
-        <div class="editor-actions">
-          <div class="active-config mono">
-            <span id="language-summary">English</span>
-          </div>
-
-          <button id="analyze-btn" type="submit" class="btn-primary">
-            <span class="btn-tag">KO</span>
-            <span>ANALYZE</span>
-          </button>
-        </div>
-      </form>
-
-      <!-- Status / Alerts -->
-      <div id="status" class="alert-box hidden" role="status"></div>
-
-      <!-- Cache Prompt -->
-      <div id="cache-prompt" class="cache-callout hidden">
-        <span class="mono">ARCHIVED AUDIT FOUND FOR THIS PHRASE.</span>
-        <div class="cache-btns">
-          <button id="use-cache" type="button" class="btn-sm btn-outline">Load Saved</button>
-          <button id="analyze-again" type="button" class="btn-sm btn-solid">Re-Analyze ↺</button>
-        </div>
-      </div>
-
-      <!-- Dynamic Output Results -->
-      <div id="result" class="result-mount"></div>
-    </section>
-
-    <!-- 2. HISTORY VIEW -->
-    <section id="history" class="view">
-      <div class="section-title-row">
-        <h2 class="section-heading">Study Ledger</h2>
-        <span class="mono count-badge">Saved Lookups</span>
-      </div>
-      <div id="history-list" class="history-grid"></div>
-    </section>
-
-    <!-- 3. SETTINGS VIEW -->
-    <section id="settings" class="view">
-      <div class="section-title-row">
-        <h2 class="section-heading">Configuration & Engine</h2>
-      </div>
-
-      <div class="settings-card">
-        <div class="setting-group">
-          <label class="setting-label mono">Google Gemini API Key</label>
-          <p class="setting-desc">Stored client-side in your browser's local storage. Never routed to external servers.
-          </p>
-          <div class="input-action-row">
-            <input type="password" id="api-key" placeholder="AIzaSy..." autocomplete="off">
-            <button id="save-key" type="button" class="btn-solid">Save Key</button>
-          </div>
-          <span id="key-saved" class="mono success-msg hidden">✓ Key locked and stored locally</span>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label mono">Target Languages</label>
-          <div id="language-options" class="chip-grid"></div>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label mono">Learner Proficiency</label>
-          <div id="level-options" class="chip-grid"></div>
-        </div>
-
-        <div class="setting-group">
-          <label class="setting-label mono">Breakdown Detail</label>
-          <div id="detail-options" class="chip-grid"></div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-</body>
-
-</html>
+<section id="notes" class="view"><div class="page-heading"><div><h1>My Notes</h1></div><button id="start-review" type="button" class="btn-primary">Quick review</button></div><div class="notes-tools"><label class="sr-only" for="notes-search">Search saved items</label><input id="notes-search" type="search" placeholder="Search words, grammar or meaning"><label class="sr-only" for="notes-filter">Item type</label><select id="notes-filter"><option value="all">All items</option><option value="vocabulary">Vocabulary & phrases</option><option value="grammar">Grammar</option></select><span id="notes-count" role="status"></span></div><div id="notes-list" class="notes-grid"></div></section>
+<section id="review" class="view"><div class="page-heading"><div><h1>Quick review</h1></div><span id="review-progress" role="status"></span></div><div class="review-surface"><article id="review-card"></article><button id="reveal-answer" type="button" class="btn-primary" hidden>Reveal meaning</button><div id="review-grades" hidden><button id="review-again" type="button">Review again</button><button id="review-remembered" type="button">Remembered</button></div></div></section>
+<section id="compare" class="view"><div class="page-heading"><div><h1>Compare expressions</h1></div></div><form id="compare-form"><div class="compare-inputs"><div><label for="compare-a">First expression</label><input id="compare-a" maxlength="120" placeholder="-더니" required></div><div><label for="compare-b">Second expression</label><input id="compare-b" maxlength="120" placeholder="-았/었더니" required></div><button id="compare-submit" class="btn-primary" type="submit">Compare</button></div></form><div id="compare-status" role="status"></div><div id="compare-result"></div></section>
+</main></body></html>
