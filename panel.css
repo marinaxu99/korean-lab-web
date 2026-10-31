@@ -1,0 +1,770 @@
+/* Result styles copied verbatim from the Korean Lab Safari extension (content.js, getSharedEditorialCSS, 1.3.28)
+   so the website and the extension render explanations identically. Only the two global selectors
+   (* and ::selection) are scoped to .kl-bubble. Site-specific adjustments live in styles.css. */
+.kl-bubble, .kl-bubble * { box-sizing: border-box; letter-spacing: 0 !important; }
+    .kl-bubble-body { overflow-wrap: anywhere; min-width: 0; }
+    .kl-g-top > * { min-width: 0; }
+    .kl-head-left { flex-wrap: wrap; }
+    .kl-search-input { min-width: 0; }
+    .kl-vocab-card { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 12px; padding: 9px 11px; border: 1px solid #1c2024; border-radius: 6px; background: #f2efe6; }
+    .kl-vocab-card > * { min-width: 0; }
+    .kl-term-list { grid-column: 1 / -1; display: grid; gap: 6px; border-top: 1px solid #ddd9ce; padding-top: 7px; }
+    .kl-term-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px; align-items: baseline; font-size: 10.5px; line-height: 1.45; }
+    .kl-term-heading { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: baseline; min-width: 0; }
+    .kl-term-heading .kl-chunk-root { white-space: normal; }
+    .kl-term-definition { color: #397367; min-width: 0; text-align: right; align-self: center; font-weight: 500; }
+    .kl-vocab-card > .kl-compact-meta { grid-column: 1 / -1; }
+    .kl-phrase-label { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; }
+    .kl-phrase-label .kl-chunk-text { line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }
+    .kl-compact-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 5px; color: #636d76; font-size: 10.5px; line-height: 1.45; }
+    .kl-dictionary-meta { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; min-width: 0; }
+    .kl-compact-meta .kl-chunk-root { white-space: normal; }
+    .kl-inline-hanja { color: #667b78; font-size: 11px; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+    .kl-vocab-meaning { color: #c7512e; font-size: 12.5px; font-weight: 600; text-align: right; line-height: 1.45; }
+    .kl-root-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 7px; margin-top: 5px; color: #636d76; font-size: 10.5px; line-height: 1.45; }
+    .kl-root-line .kl-chunk-root { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+    .kl-word-class { color: #667b78; font-size: 9.5px; font-weight: 400; line-height: 1.4; margin-left: 3px; }
+    .kl-hanja-label { font-size: 9px; color: #727a82; margin-right: 4px; }
+    .kl-sentence-masthead .kl-word-title { font-size: 17px; line-height: 1.55; font-weight: 600; margin: 2px 0 10px; }
+    .kl-sentence-masthead .kl-meaning-banner { font-size: 14px; font-weight: 600; line-height: 1.5; margin: 0; padding-left: 10px; border-left-width: 3px; }
+    .kl-phrase-masthead .kl-word-title { font-size: 22px; line-height: 1.4; margin: 2px 0 5px; }
+    .kl-phrase-masthead .kl-word-meaning { font-size: 14.5px; font-weight: 600; line-height: 1.45; }
+    .kl-vocab-detail { font-size: 11px; color: #555d65; margin: 4px 0; }
+    .kl-search-submit:disabled { opacity: .5; cursor: wait; }
+    .kl-word-title { word-break: keep-all; overflow-wrap: anywhere; }
+
+
+    .kl-bubble ::selection {
+      background: #1c2024 !important;
+      color: #fbf9f4 !important;
+    }
+
+    .kl-bubble {
+      position: absolute;
+      width: 430px;
+      max-width: calc(100vw - 32px);
+      overflow-y: auto;
+      background: #fbf9f4;
+      border: 2px solid #1c2024;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 4px 4px 0 #1c2024;
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1c2024;
+      font-size: 13.5px;
+      line-height: 1.5;
+      z-index: 2147483647;
+      animation: klPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .kl-floating-panel {
+      position: fixed; display: flex; flex-direction: column;
+      max-width: none; overflow: hidden; transform: none; animation: none;
+    }
+    .kl-floating-panel .kl-bubble-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .kl-floating-panel .kl-bubble-head { flex-shrink: 0; cursor: grab; touch-action: none; user-select: none; }
+    .kl-floating-panel .kl-bubble-head.kl-dragging { cursor: grabbing; }
+    .kl-floating-panel .kl-bubble-head:focus-visible { outline: 2px solid #c7512e; outline-offset: 3px; }
+    .kl-centered-modal {
+      position: fixed !important;
+      top: 20% !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: 480px !important;
+      max-height: 65vh !important;
+      box-shadow: 6px 6px 0 #1c2024 !important;
+    }
+
+    @keyframes klPop {
+      from { opacity: 0; transform: scale(0.97) translateY(4px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .kl-bubble::-webkit-scrollbar { width: 5px; }
+    .kl-bubble::-webkit-scrollbar-track { background: transparent; }
+    .kl-bubble::-webkit-scrollbar-thumb { background: #cecbc2; border-radius: 4px; }
+
+    .kl-bubble-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      border-bottom: 1.5px dashed #cecbc2;
+      padding-bottom: 8px;
+    }
+
+    .kl-head-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kl-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffffff;
+      background: #c7512e;
+      padding: 2.5px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.6px;
+    }
+
+    .kl-mode-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      color: #555d65;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+    }
+
+    .kl-hotkey-hint {
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      background: #eeece4;
+      border: 1px solid #1c2024;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #555d65;
+      cursor: default;
+    }
+
+    .kl-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1c2024;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .kl-close-btn:hover { color: #c7512e; }
+
+    .kl-search-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .kl-search-input {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid #1c2024;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #1c2024;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .kl-search-input:focus {
+      border-color: #c7512e;
+    }
+
+    .kl-search-submit {
+      background: #1c2024;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 0 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #c7512e;
+      transition: transform 0.1s ease;
+    }
+    .kl-search-submit:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #c7512e;
+    }
+
+    .kl-empty-hint {
+      padding: 24px 10px;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: #727a82;
+      line-height: 1.5;
+    }
+
+    .kl-meaning-banner {
+      font-size: 15.5px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #1c2024;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      border-left: 3.5px solid #1c2024;
+      padding-left: 10px;
+    }
+
+    .kl-section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #2c343b;
+      margin: 15px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .kl-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #dcd9ce;
+    }
+
+    .kl-breakdown-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .kl-chunk-card {
+      background: #f2efe6;
+      border: 1px solid #1c2024;
+      border-radius: 6px;
+      padding: 8px 11px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kl-chunk-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .kl-chunk-primary-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .kl-chunk-text {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1c2024;
+      line-height: 1.2;
+    }
+
+    .kl-chunk-root {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #3b4249;
+      background: #ffffff;
+      border: 1px solid #cecbc2;
+      padding: 1px 5px;
+      border-radius: 3px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .kl-chunk-pos {
+      font-family: 'Space Mono', monospace;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #727a82;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      line-height: 1.3;
+    }
+
+    .kl-chunk-mean {
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #c7512e;
+      text-align: right;
+      line-height: 1.3;
+      max-width: 160px;
+      word-break: break-word;
+      align-self: center;
+    }
+
+    .kl-ex-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .kl-ex-card {
+      background: #f2efe6;
+      border: 1px solid #1c2024;
+      border-radius: 6px;
+      padding: 9px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+    }
+
+    .kl-ex-ko {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1c2024;
+      line-height: 1.35;
+    }
+
+    .kl-ex-en {
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #c7512e;
+      line-height: 1.35;
+    }
+
+    .kl-alt-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kl-alt-card {
+      background: #ffffff;
+      border: 1px solid #1c2024;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .kl-alt-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .kl-alt-term {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1c2024;
+    }
+
+    .kl-alt-trans {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #c7512e;
+      text-align: right;
+    }
+
+    .kl-alt-nuance {
+      font-size: 12.5px;
+      color: #3b4249;
+      line-height: 1.4;
+      border-top: 1px dashed #dcd9ce;
+      padding-top: 4px;
+    }
+
+    .kl-grammar-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kl-grammar-card {
+      background: #ffffff;
+      border: 1.5px solid #1c2024;
+      border-left: 5px solid #c7512e;
+      border-radius: 6px;
+      padding: 10px 12px;
+    }
+
+    .kl-g-top {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+
+    .kl-g-pattern {
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+      min-width: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1c2024;
+    }
+
+    .kl-g-meaning {
+      text-align: right;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c7512e;
+    }
+
+    .kl-g-rule {
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      color: #4b5563;
+      background: #fbf9f4;
+      border: 1px solid #e2dfd5;
+      padding: 3px 6px;
+      border-radius: 3px;
+      display: inline-block;
+      margin: 2px 0 5px;
+    }
+
+    .kl-g-expl {
+      font-size: 12px;
+      color: #3b4249;
+      line-height: 1.4;
+    }
+
+    .kl-tone-card {
+      background: #ffffff;
+      border: 1px dashed #b8b5ab;
+      border-radius: 6px;
+      padding: 8px 11px;
+      font-size: 11.5px;
+      color: #3b4249;
+      margin-top: 12px;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .kl-tone-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: #636d76;
+    }
+
+    .kl-word-masthead {
+      margin-bottom: 12px;
+    }
+
+    .kl-word-title {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1c2024;
+      margin-right: 8px;
+    }
+
+    .kl-hanja-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 10.5px;
+      background: #eeece4;
+      border: 1px solid #1c2024;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+
+    .kl-word-meaning {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #c7512e;
+      margin-top: 3px;
+    }
+
+    .kl-loading, .kl-error {
+      padding: 20px 0;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: #636d76;
+    }
+
+    .kl-error { color: #c7512e; font-family: 'Space Grotesk', sans-serif; font-size: 12px; }
+
+    .kl-pulse-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: #c7512e;
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: klPulse 1.2s infinite ease-in-out;
+    }
+
+    /* Approved light theme. Geometry and interaction rules above stay intact. */
+    .kl-bubble { background: #fff; border: 1px solid #dfe4e1; border-radius: 8px; padding: 0 24px 24px; box-shadow: 0 8px 26px #28383018; color: #262b2b; font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Helvetica Neue", sans-serif; }
+    .kl-bubble * { font-family: inherit; }
+    .kl-centered-modal { box-shadow: 0 8px 26px #28383018 !important; }
+    .kl-bubble-head { min-height: 52px; margin-bottom: 0; padding: 12px 0; border-bottom: 1px solid #e8ece9; gap: 12px; }
+    .kl-badge { background: transparent; color: #7a827e; padding: 0; font-size: 11px; font-weight: 500; }
+    .kl-mode-pill { display: none; }
+    .kl-hotkey-hint { background: transparent; border: 0; color: #7a827e; font-weight: 400; }
+    .kl-close-btn { font-size: 19px; font-weight: 300; color: #7a827e; }
+    .kl-word-masthead { padding: 23px 0 20px; margin: 0; }
+    .kl-word-title, .kl-phrase-masthead .kl-word-title { font-size: 29px; font-weight: 300; line-height: 1.4; margin: 0 0 8px; }
+    .kl-sentence-masthead .kl-word-title { font-size: 21px; font-weight: 300; line-height: 1.6; margin: 0 0 8px; }
+    .kl-meaning-banner, .kl-sentence-masthead .kl-meaning-banner { border: 0; padding: 0; font-size: 14px; font-weight: 400; line-height: 1.65; color: #56615a; }
+    .kl-word-meaning, .kl-phrase-masthead .kl-word-meaning { color: #20752b; font-size: 17px; font-weight: 400; line-height: 1.55; }
+    .kl-section-label { border-top: 1px solid #e8ece9; padding-top: 17px; margin: 20px 0 12px; font-size: 10px; font-weight: 500; color: #7a827e; text-transform: none; }
+    .kl-word-masthead + .kl-section-label { margin-top: 0; }
+    .kl-section-label::after { display: none; }
+    .kl-vocab-card, .kl-chunk-card { border: 0; border-radius: 4px; background: rgba(32,143,45,.055); padding: 12px 14px; gap: 14px; }
+    .kl-chunk-text, .kl-ex-ko, .kl-alt-term { font-size: 16px; font-weight: 400; line-height: 1.5; }
+    .kl-vocab-meaning, .kl-chunk-mean { color: #20752b; font-size: 13px; font-weight: 400; line-height: 1.6; }
+    .kl-term-list { border-top: 1px solid #e0e9e2; gap: 10px; padding-top: 10px; }
+    .kl-term-row { font-size: 13px; align-items: center; }
+    .kl-term-definition { color: #20752b; font-weight: 400; }
+    .kl-chunk-root { background: transparent; border: 0; padding: 0; font-size: 14px; font-weight: 400; line-height: 1.5; }
+    .kl-word-class, .kl-chunk-pos, .kl-inline-hanja { font-size: 11px; font-weight: 400; color: #7a827e; text-transform: none; }
+    .kl-grammar-card { border: 0; border-radius: 4px; padding: 12px 14px; background: rgba(255,144,9,.055); }
+    .kl-g-top { gap: 12px; margin-bottom: 10px; }
+    .kl-g-pattern { font-size: 16px; font-weight: 400; }
+    .kl-g-meaning { font-size: 13px; font-weight: 400; color: #b65e06; }
+    .kl-g-rule { background: transparent; border: 0; padding: 0; margin: 0 0 7px; font-size: 11px; color: #7a827e; }
+    .kl-g-expl, .kl-tone-card { font-size: 12px; line-height: 1.8; color: #636d67; }
+    .kl-tone-card { border: 0; border-top: 1px solid #e8ece9; border-radius: 0; padding: 17px 0 0; margin-top: 20px; gap: 12px; }
+    .kl-tone-label { text-transform: none; color: #7a827e; font-size: 10px; font-weight: 500; }
+    .kl-ex-card, .kl-alt-card { border: 0; border-radius: 4px; background: #f5f8f6; }
+    .kl-ex-en, .kl-alt-trans { color: #20752b; font-weight: 400; font-size: 13px; }
+    .kl-alt-nuance { border-top: 1px solid #e8ece9; }
+    .kl-search-bar { margin-top: 18px; }
+    .kl-search-input { border: 1px solid #dfe4e1; font-weight: 400; }
+    .kl-search-submit, .kl-search-submit:active { background: #20752b; box-shadow: none; font-weight: 400; }
+    .kl-hanja-tag { background: transparent; border: 0; color: #7a827e; }
+    .kl-pulse-dot { background: #20752b; }
+    @media (max-width: 420px) { .kl-bubble { padding-left: 18px; padding-right: 18px; } }
+
+    /* Size tokens cover all result surfaces, including reverse lookup. */
+    .kl-bubble { font-size: var(--kl-unit, 12px); padding: 0 18px 18px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    .kl-bubble-head { min-height: 42px; padding: 9px 0; }
+    .kl-word-masthead { padding: 16px 0; }
+    .kl-word-title, .kl-phrase-masthead .kl-word-title { font-size: calc(var(--kl-unit) * 1.67); }
+    .kl-sentence-masthead .kl-word-title { font-size: calc(var(--kl-unit) * 1.42); }
+    .kl-word-meaning, .kl-phrase-masthead .kl-word-meaning,
+    .kl-meaning-banner, .kl-sentence-masthead .kl-meaning-banner { font-size: calc(var(--kl-unit) * 1.08); }
+    .kl-chunk-text, .kl-ex-ko, .kl-alt-term, .kl-g-pattern { font-size: calc(var(--kl-unit) * 1.17); }
+    .kl-vocab-meaning, .kl-term-row, .kl-g-meaning, .kl-ex-en, .kl-alt-trans, .kl-chunk-mean { font-size: var(--kl-unit); }
+    .kl-chunk-root { font-size: calc(var(--kl-unit) * 1.08); }
+    .kl-g-expl, .kl-tone-card, .kl-alt-nuance { font-size: var(--kl-unit); line-height: 1.65; }
+    .kl-g-rule, .kl-inline-hanja, .kl-word-class, .kl-compact-meta, .kl-root-line { font-size: calc(var(--kl-unit) * .88); }
+    .kl-section-label, .kl-tone-label { font-size: calc(var(--kl-unit) * .83); }
+    .kl-section-label { padding-top: 12px; margin: 14px 0 9px; }
+    .kl-vocab-card, .kl-grammar-card { padding: 10px 12px; gap: 10px; }
+    .kl-term-list { gap: 7px; padding-top: 8px; }
+    .kl-g-top { margin-bottom: 7px; }
+    .kl-tone-card { margin-top: 14px; padding-top: 12px; gap: 8px; }
+    .kl-centered-modal { width: min(390px, calc(100vw - 24px)) !important; }
+    .kl-search-input { font-size: var(--kl-unit); }
+    .kl-grammar-card { padding: 12px; }
+    .kl-phrase-card { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+    .kl-phrase-card .kl-vocab-meaning { text-align: left; font-size: calc(var(--kl-unit) * .94); line-height: 1.6; color: #47705a; }
+    .kl-phrase-card .kl-term-list { margin-top: 5px; }
+    .kl-phrase-card .kl-term-row { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+    .kl-phrase-card .kl-term-definition { text-align: left; font-size: calc(var(--kl-unit) * .92); }
+    .kl-g-top { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 4px; margin: 0; padding-bottom: 10px; }
+    .kl-g-pattern { font-weight: 500; line-height: 1.45; }
+    .kl-g-meaning { text-align: left; line-height: 1.55; font-size: calc(var(--kl-unit) * .94); }
+    .kl-g-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; border-top: 1px solid rgba(128,104,69,.12); padding-top: 9px; margin-top: 2px; }
+    .kl-g-detail + .kl-g-detail { border-top: 0; margin-top: 0; }
+    .kl-g-label { color: #888074; font-size: calc(var(--kl-unit) * .8); font-weight: 500; padding-top: 2px; }
+    .kl-g-detail .kl-g-rule { display: block; margin: 0; color: #646e68; font-size: calc(var(--kl-unit) * .92); line-height: 1.65; }
+    .kl-g-detail .kl-g-expl { color: #37453d; font-size: var(--kl-unit); line-height: 1.65; }
+    .kl-scroll-cue { flex-shrink: 0; width: 100%; border: 0; border-top: 1px solid #e8ece9; background: white; color: #557262; padding: 7px 0 0; margin-top: 6px; font-size: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 7px; }
+    .kl-scroll-cue[hidden] { display: none; }
+    .kl-scroll-cue:focus-visible { outline: 2px solid #648273; outline-offset: 2px; }
+    /* The scrollbar gets its own strip in the bubble's right padding, so it never sits on top of the cards. */
+    .kl-bubble-body { scrollbar-width: thin; scrollbar-color: #b7c3bb transparent; scrollbar-gutter: stable; margin-right: -12px; padding-right: 12px; }
+    .kl-bubble-body::-webkit-scrollbar { width: 5px; }
+    .kl-bubble-body::-webkit-scrollbar-thumb { background: #b7c3bb; border-radius: 4px; }
+    .kl-stream-tail { margin-top: 12px; }
+
+    /* ---- Shared two-column grid ----------------------------------------------------------
+       Every row in the panel (phrase -> meaning, word -> definition, pattern -> meaning,
+       Formation / In context -> text, Usage & Nuance -> text) uses the SAME split, so one
+       vertical line runs through the whole panel. Both columns are left-aligned. */
+    .kl-bubble-body { --kl-split: 38%; --kl-gap: 14px; container-type: inline-size; }
+    .kl-bubble .kl-vocab-card, .kl-bubble .kl-phrase-card {
+      display: grid; grid-template-columns: var(--kl-split) minmax(0, 1fr); column-gap: var(--kl-gap); row-gap: 0;
+      align-items: baseline; padding: 12px 14px;
+    }
+    .kl-bubble .kl-vocab-meaning, .kl-bubble .kl-phrase-card .kl-vocab-meaning {
+      text-align: left; font-size: var(--kl-unit); line-height: 1.6; font-weight: 400; color: #20752b;
+    }
+    .kl-bubble .kl-phrase-label { line-height: 1.5; }
+    .kl-bubble .kl-term-list, .kl-bubble .kl-phrase-card .kl-term-list {
+      grid-column: 1 / -1; display: grid; gap: 9px; margin-top: 11px; padding-top: 11px; border-top: 1px solid #dfe9e1;
+    }
+    .kl-bubble .kl-term-row, .kl-bubble .kl-phrase-card .kl-term-row {
+      display: grid; grid-template-columns: var(--kl-split) minmax(0, 1fr); column-gap: var(--kl-gap);
+      align-items: baseline; font-size: var(--kl-unit); line-height: 1.55;
+    }
+    /* Word on its own line; class and Hanja on a quieter second line, the same in every row. */
+    .kl-bubble .kl-term-heading, .kl-bubble .kl-phrase-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 6px; }
+    .kl-bubble .kl-term-heading .kl-chunk-root { flex-basis: 100%; font-size: calc(var(--kl-unit) * 1.08); }
+    .kl-bubble .kl-term-heading .kl-word-class, .kl-bubble .kl-phrase-label .kl-word-class { margin-left: 0; }
+    .kl-bubble .kl-term-definition, .kl-bubble .kl-phrase-card .kl-term-definition {
+      text-align: left; align-self: baseline; color: #3f6f4d; font-size: calc(var(--kl-unit) * .95); line-height: 1.55;
+    }
+
+    .kl-bubble .kl-grammar-card { padding: 12px 14px; }
+    .kl-bubble .kl-g-top {
+      display: grid; grid-template-columns: var(--kl-split) minmax(0, 1fr); column-gap: var(--kl-gap);
+      align-items: baseline; margin: 0; padding-bottom: 11px;
+    }
+    .kl-bubble .kl-g-meaning { text-align: left; font-size: var(--kl-unit); line-height: 1.6; }
+    .kl-bubble .kl-g-detail {
+      display: grid; grid-template-columns: var(--kl-split) minmax(0, 1fr); column-gap: var(--kl-gap);
+      align-items: baseline; padding-top: 10px; margin-top: 0;
+    }
+    .kl-bubble .kl-g-detail + .kl-g-detail { padding-top: 7px; }
+    .kl-bubble .kl-g-label { padding-top: 0; }
+
+
+    /* Very narrow panels: stack instead of squeezing two columns. */
+    @container (max-width: 280px) {
+      .kl-bubble .kl-vocab-card, .kl-bubble .kl-phrase-card, .kl-bubble .kl-term-row, .kl-bubble .kl-g-top,
+      .kl-bubble .kl-g-detail { grid-template-columns: minmax(0, 1fr); row-gap: 3px; }
+    }
+    .kl-centered-modal { display: flex; flex-direction: column; overflow: hidden; }
+    .kl-centered-modal .kl-bubble-body { min-height: 0; overflow-y: auto; }
+    .kl-centered-modal .kl-bubble-head { flex-shrink: 0; }
+    /* ---- Colour tokens (light) -------------------------------------------------------------- */
+    .kl-bubble {
+      --kl-c-bg: #ffffff; --kl-c-fg: #262b2b; --kl-c-strong: #1c2024; --kl-c-soft: #56615a; --kl-c-muted: #6b746f; --kl-c-line: #e8ece9;
+      --kl-c-green: #20752b; --kl-c-green-tint: #e6f2e9; --kl-c-green-line: #a9d3b3;
+      --kl-c-orange: #a35405; --kl-c-orange-tint: #fbeedd; --kl-c-orange-line: #d98a2b;
+      --kl-c-voc: #55605a; --kl-c-voc-w: #3d4842; --kl-c-voc-m: #68706b; --kl-c-voc-d: #5d7a66;
+    }
+
+    /* ---- Layout D: numbered sentence map ----------------------------------------------------- */
+    .kl-d-map { line-height: 2.15 !important; color: var(--kl-c-strong); }
+    .kl-d-seg { border-bottom: 2px solid var(--kl-c-green-line); padding-bottom: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+    .kl-d-n, .kl-d-l { display: inline-block; font-size: 9.5px; font-weight: 600; line-height: 1; vertical-align: super; }
+    .kl-d-n { color: var(--kl-c-green); margin: 0 3px 0 1px; }
+    .kl-d-l { color: var(--kl-c-orange); margin-left: 1px; }
+    .kl-d-gm { text-decoration: underline dotted var(--kl-c-orange-line); text-decoration-thickness: 2px; text-underline-offset: 3px; -webkit-text-decoration: underline dotted var(--kl-c-orange-line); }
+    .kl-d-list { display: grid; }
+    .kl-d-item { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 9px; padding: 10px 0; border-bottom: 1px solid var(--kl-c-line); }
+    .kl-d-item:last-child { border-bottom: 0; }
+    .kl-d-item.kl-d-word { grid-template-columns: minmax(0, 1fr); }
+    .kl-d-badge { width: 18px; height: 18px; border-radius: 9px; background: var(--kl-c-green-tint); color: var(--kl-c-green); font-size: 10px; font-weight: 600; line-height: 1; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+    .kl-d-badge.kl-d-o { background: var(--kl-c-orange-tint); color: var(--kl-c-orange); }
+    .kl-d-main { min-width: 0; }
+    .kl-d-ko { font-size: var(--kl-unit); line-height: 1.5; color: var(--kl-c-soft); margin-bottom: 2px; word-break: keep-all; overflow-wrap: anywhere; }
+    .kl-d-en { font-size: calc(var(--kl-unit) * 1.08); line-height: 1.55; color: var(--kl-c-green); }
+    .kl-d-term { font-size: calc(var(--kl-unit) * 1.25); line-height: 1.45; color: var(--kl-c-strong); margin-bottom: 2px; }
+    .kl-d-term .kl-inline-hanja { margin-left: 6px; }
+    .kl-d-vocab { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; font-size: calc(var(--kl-unit) * .92); line-height: 1.5; color: var(--kl-c-voc); }
+    .kl-d-voc { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; min-width: 0; }
+    .kl-d-w { color: var(--kl-c-voc-w); font-size: calc(var(--kl-unit) * .96); }
+    .kl-d-voc .kl-inline-hanja { color: var(--kl-c-voc-m); font-size: calc(var(--kl-unit) * .83); }
+    .kl-d-def { color: var(--kl-c-voc-d); margin-left: 3px; }
+    .kl-d-pos { color: var(--kl-c-voc-m); font-size: .88em; }
+    .kl-d-en .kl-d-pos { color: var(--kl-c-muted); }
+    .kl-d-gtop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+    .kl-d-pat { font-size: calc(var(--kl-unit) * 1.17); line-height: 1.45; color: var(--kl-c-strong); }
+    .kl-d-gmean { font-size: var(--kl-unit); line-height: 1.5; color: var(--kl-c-orange); }
+    .kl-d-ctx { margin-top: 5px; font-size: calc(var(--kl-unit) * .96); line-height: 1.6; color: var(--kl-c-fg); }
+    .kl-d-rule { margin-top: 2px; font-size: calc(var(--kl-unit) * .88); line-height: 1.55; color: var(--kl-c-muted); }
+
+    /* ---- Dark theme: used when the page behind the selection is dark --------------------------- */
+    .kl-bubble.kl-dark {
+      /* Graphite neutrals; green and orange sit exactly where they do in the light theme, toned to mid-values so they read without glowing. */
+      --kl-c-bg: #1c1d1f; --kl-c-fg: #d9dadd; --kl-c-strong: #f2f2f3; --kl-c-soft: #a7a9ad; --kl-c-muted: #8a8c91; --kl-c-line: #2e3033;
+      --kl-c-green: #6fae7c; --kl-c-green-tint: rgba(111,174,124,.14); --kl-c-green-line: #4a7b55;
+      --kl-c-orange: #d08a4a; --kl-c-orange-tint: rgba(208,138,74,.14); --kl-c-orange-line: #a8703f;
+      --kl-c-voc: #b4b6ba; --kl-c-voc-w: #cfd1d4; --kl-c-voc-m: #85878c; --kl-c-voc-d: #8fa996;
+      background: var(--kl-c-bg); color: var(--kl-c-fg); border-color: #323438; box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    .kl-centered-modal.kl-dark { box-shadow: 0 10px 30px rgba(0,0,0,.5) !important; }
+    .kl-dark ::selection { background: #d9dadd !important; color: #1c1d1f !important; }
+    .kl-dark .kl-bubble-head, .kl-dark .kl-section-label, .kl-dark .kl-tone-card, .kl-dark .kl-alt-nuance,
+    .kl-dark .kl-term-list, .kl-dark .kl-g-detail, .kl-dark .kl-scroll-cue { border-color: var(--kl-c-line) !important; }
+    .kl-dark .kl-badge, .kl-dark .kl-hotkey-hint, .kl-dark .kl-close-btn, .kl-dark .kl-section-label, .kl-dark .kl-tone-label,
+    .kl-dark .kl-g-label, .kl-dark .kl-g-rule, .kl-dark .kl-word-class, .kl-dark .kl-chunk-pos, .kl-dark .kl-inline-hanja,
+    .kl-dark .kl-loading, .kl-dark .kl-empty-hint, .kl-dark .kl-hanja-tag { color: var(--kl-c-muted) !important; }
+    .kl-dark .kl-close-btn:hover { color: var(--kl-c-strong) !important; }
+    .kl-dark .kl-word-title, .kl-dark .kl-chunk-text, .kl-dark .kl-g-pattern, .kl-dark .kl-chunk-root, .kl-dark .kl-ex-ko, .kl-dark .kl-alt-term { color: var(--kl-c-strong); }
+    .kl-dark .kl-meaning-banner, .kl-dark .kl-tone-card, .kl-dark .kl-alt-nuance { color: var(--kl-c-soft) !important; }
+    .kl-dark .kl-word-meaning, .kl-dark .kl-vocab-meaning, .kl-dark .kl-term-definition, .kl-dark .kl-ex-en, .kl-dark .kl-alt-trans { color: var(--kl-c-green) !important; }
+    .kl-dark .kl-g-meaning { color: var(--kl-c-orange) !important; }
+    .kl-dark .kl-g-expl, .kl-dark .kl-g-detail .kl-g-expl { color: var(--kl-c-fg) !important; }
+    .kl-dark .kl-vocab-card, .kl-dark .kl-chunk-card, .kl-dark .kl-phrase-card { background: var(--kl-c-green-tint) !important; }
+    .kl-dark .kl-grammar-card { background: var(--kl-c-orange-tint) !important; }
+    .kl-dark .kl-tone-card, .kl-dark .kl-word-masthead, .kl-dark .kl-results-area, .kl-dark .kl-search-bar { background: transparent !important; }
+    .kl-dark .kl-tone-card .kl-tone-label { background: transparent !important; }
+    .kl-dark .kl-ex-card, .kl-dark .kl-alt-card { background: rgba(255,255,255,.045) !important; }
+    .kl-dark .kl-search-input { background: #151618 !important; color: var(--kl-c-strong) !important; border-color: #3a3c40 !important; }
+    .kl-dark .kl-search-input::placeholder { color: #7f8883; }
+    .kl-dark .kl-search-input:focus { border-color: var(--kl-c-green-line) !important; }
+    .kl-dark .kl-search-submit { background: #3f7d4b !important; color: #f2f2f3 !important; }
+    .kl-dark .kl-scroll-cue { background: var(--kl-c-bg) !important; color: var(--kl-c-green) !important; }
+    .kl-dark .kl-error { color: #f29a7c !important; }
+    .kl-dark .kl-pulse-dot { background: var(--kl-c-green) !important; }
+    .kl-dark .kl-bubble-body { scrollbar-color: #4a4c50 transparent; }
+    .kl-dark .kl-bubble-body::-webkit-scrollbar-thumb { background: #4a4c50; }
+    /* Calmer controls: the icon's ink-green instead of the saturated green; soft focus ring. */
+    .kl-search-submit, .kl-search-submit:active { background: #3f6b4c !important; color: #f6f4ee !important; border-radius: 6px; }
+    .kl-search-submit:hover { background: #375e43 !important; }
+    .kl-search-input { border-color: #dcdfdb !important; border-radius: 6px; }
+    .kl-search-input:focus { border-color: #a9bfae !important; box-shadow: 0 0 0 3px rgba(63,107,76,.10); }
+    .kl-error { color: #a4552c !important; line-height: 1.6; }
+    .kl-dark .kl-search-submit, .kl-dark .kl-search-submit:active { background: #3a5e45 !important; color: #e9ece9 !important; }
+    .kl-dark .kl-search-submit:hover { background: #426a4e !important; }
+    .kl-dark .kl-search-input:focus { border-color: #4a7b55 !important; box-shadow: 0 0 0 3px rgba(111,174,124,.12); }
+    .kl-dark .kl-error { color: #e09a72 !important; }
+    /* ---- Layout A: vocab clearly secondary; readable greys on coloured blocks --------------- */
+    .kl-bubble {
+      --kl-a-label: #5d6661; --kl-a-rule: #4f5853; --kl-a-expl: #2f3532;
+      --kl-a-line-green: #c4d6c9; --kl-a-line-orange: #e6d2bc;
+      --kl-a-vw: #3b433e; --kl-a-vd: #3b684a; --kl-a-vm: #5d6661;
+    }
+    .kl-bubble.kl-dark {
+      --kl-a-label: #b3b7bb; --kl-a-rule: #c6c9cd; --kl-a-expl: #e6e8ea;
+      --kl-a-line-green: rgba(255,255,255,.16); --kl-a-line-orange: rgba(255,255,255,.16);
+      --kl-a-vw: #dcdfe2; --kl-a-vd: #a3c9ad; --kl-a-vm: #b3b7bb;
+    }
+    .kl-bubble .kl-phrase-card .kl-term-list.kl-a-vocab, .kl-bubble .kl-term-list.kl-a-vocab {
+      border-top: 1px solid var(--kl-a-line-green) !important; margin-top: 10px; padding-top: 9px; gap: 5px;
+    }
+    .kl-bubble .kl-a-vocab .kl-term-row { font-size: calc(var(--kl-unit) * .88); line-height: 1.5; }
+    .kl-bubble .kl-a-vocab .kl-term-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; }
+    .kl-bubble .kl-a-vocab .kl-a-w { color: var(--kl-a-vw); font-size: calc(var(--kl-unit) * .95); }
+    .kl-bubble .kl-a-vocab .kl-inline-hanja { color: var(--kl-a-vm) !important; font-size: calc(var(--kl-unit) * .82); }
+    .kl-bubble .kl-a-vocab .kl-term-definition { color: var(--kl-a-vd) !important; font-size: calc(var(--kl-unit) * .9); }
+    .kl-bubble .kl-a-vocab .kl-d-pos { color: var(--kl-a-vm); font-size: .9em; margin-right: 1px; }
+    .kl-bubble .kl-word-class, .kl-bubble .kl-phrase-label .kl-inline-hanja { color: var(--kl-a-label) !important; }
+    .kl-bubble .kl-grammar-card .kl-g-detail { border-top-color: var(--kl-a-line-orange) !important; }
+    .kl-bubble .kl-grammar-card .kl-g-detail + .kl-g-detail { border-top: 0 !important; }
+    .kl-bubble .kl-grammar-card .kl-g-label { color: var(--kl-a-label) !important; font-weight: 500; }
+    .kl-bubble .kl-grammar-card .kl-g-rule { color: var(--kl-a-rule) !important; }
+    .kl-bubble .kl-grammar-card .kl-g-expl { color: var(--kl-a-expl) !important; }
+    /* Light theme: header, section labels and grammar meanings meet 4.5:1. */
+    .kl-bubble:not(.kl-dark) .kl-badge, .kl-bubble:not(.kl-dark) .kl-hotkey-hint, .kl-bubble:not(.kl-dark) .kl-close-btn,
+    .kl-bubble:not(.kl-dark) .kl-section-label, .kl-bubble:not(.kl-dark) .kl-tone-label { color: #646d68 !important; }
+    .kl-bubble:not(.kl-dark) .kl-close-btn:hover { color: #1c2024 !important; }
+    .kl-bubble:not(.kl-dark) .kl-grammar-card .kl-g-meaning { color: #9a4f05 !important; }
+    /* Thin dividers that are actually visible on the coloured blocks. */
+    .kl-bubble { --kl-a-line-green: #b3c9b9; --kl-a-line-orange: #dcc4a8; }
+    .kl-bubble.kl-dark { --kl-a-line-green: rgba(255,255,255,.2); --kl-a-line-orange: rgba(255,255,255,.2); }
+    @keyframes klPulse {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
